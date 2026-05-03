@@ -553,7 +553,7 @@
 
     <div>
       <div class="panel-label">Solfeggio / Sacred</div>
-      <div class="preset-grid">
+      <div class="preset-grid" id="carrierGrid">
         <button class="preset-btn" onclick="applyCarrierPreset(174)">
           <span class="pname">174 Hz</span>
           <span class="phz">grounding</span>
@@ -808,8 +808,8 @@
   function applyPreset(hz, name) {
     beatFreq = hz;
     document.getElementById('beatSlider').value = hz;
-    document.querySelectorAll('.preset-btn').forEach(b => {
-      b.classList.toggle('active', b.textContent.includes(name.split(' ')[0]) && b.textContent.includes(name.split(' ')[1] || name));
+    document.querySelectorAll('#presetGrid .preset-btn').forEach(b => {
+      b.classList.toggle('active', b.querySelector('.pname').textContent.trim() === name);
     });
     if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.05);
     if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.05);
@@ -819,6 +819,9 @@
   function applyCarrierPreset(hz) {
     carrierFreq = hz;
     document.getElementById('carrierSlider').value = hz;
+    document.querySelectorAll('#carrierGrid .preset-btn').forEach(b => {
+      b.classList.toggle('active', b.querySelector('.pname').textContent.trim() === hz + ' Hz');
+    });
     if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.05);
     if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.05);
     updateUI();
@@ -928,6 +931,7 @@
       sweeping = true;
       btn.classList.add('active');
       btn.textContent = '■ Stop Sweep';
+      const preSweepBeat = beatFreq;
       let dir = 1;
       let current = parseFloat(document.getElementById('beatSlider').value);
       sweepInterval = setInterval(() => {
@@ -940,11 +944,20 @@
         if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.02);
         updateUI();
       }, 50);
+      sweepInterval._preSweepBeat = preSweepBeat;
     } else {
       sweeping = false;
+      const restore = sweepInterval._preSweepBeat;
       clearInterval(sweepInterval);
       btn.classList.remove('active');
       btn.textContent = '↻ Schumann Sweep';
+      if (restore !== undefined) {
+        beatFreq = restore;
+        document.getElementById('beatSlider').value = restore;
+        if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.1);
+        if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.1);
+        updateUI();
+      }
     }
   }
 
