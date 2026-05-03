@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Shear Zone — Myathe Magick</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital@0;1&display=swap');
+
+  :root {
+    --bg: #0a0d0f;
+    --bg2: #111518;
+    --bg3: #181d22;
+    --border: #2a3240;
+    --border2: #3a4a5a;
+    --text: #c8d4dc;
+    --text2: #7a8fa0;
+    --text3: #4a5f6f;
+    --accent: #4ab8a0;
+    --accent2: #2a7a68;
+    --accent3: #1a4a3e;
+    --warn: #c8743a;
+    --warn2: #8a4420;
+    --deep: #7a5ab8;
+    --deep2: #4a3a7a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 20px;
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+  }
+
+  .header-title {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .header-sub {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 4px;
+  }
+
+  .rift-vis {
+    position: relative;
+    height: 80px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rift-vis canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .preset-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 6px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .preset-btn:hover {
+    border-color: var(--accent2);
+    color: var(--text);
+    background: var(--bg3);
+  }
+
+  .preset-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent3);
+  }
+
+  .preset-btn .pname {
+    display: block;
+    font-weight: 700;
+  }
+
+  .preset-btn .phz {
+    display: block;
+    color: var(--text3);
+    font-size: 9px;
+  }
+
+  .preset-btn.active .phz {
+    color: var(--accent2);
+  }
+
+  .content {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ctrl-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    min-width: 90px;
+  }
+
+  .ctrl-value {
+    font-size: 13px;
+    color: var(--accent);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+  }
+
+  input[type="range"]:hover {
+    background: var(--border2);
+  }
+
+  .big-display {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 20px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .metric {
+    text-align: center;
+  }
+
+  .metric-val {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .metric-val.deep { color: var(--deep); }
+  .metric-val.warn { color: var(--warn); }
+
+  .metric-label {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .waveform-area {
+    position: relative;
+    height: 120px;
+  }
+
+  .waveform-area canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .transport {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .play-btn {
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 12px 28px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .play-btn:hover {
+    background: var(--accent3);
+  }
+
+  .play-btn.playing {
+    background: var(--accent3);
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+
+  .sweep-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 12px 20px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .sweep-btn:hover {
+    border-color: var(--border2);
+    color: var(--text);
+  }
+
+  .sweep-btn.active {
+    border-color: var(--deep);
+    color: var(--deep);
+    background: var(--deep2);
+  }
+
+  .band-map {
+    display: flex;
+    gap: 0;
+    height: 28px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .band-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-right: 1px solid var(--border);
+    transition: color 0.3s;
+    cursor: default;
+  }
+
+  .band-seg.lit {
+    color: var(--bg);
+  }
+
+  .band-indicator {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--accent);
+    transition: left 0.1s;
+    pointer-events: none;
+  }
+
+  .attune-section {
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+
+  .attune-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .attune-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .attune-item:hover {
+    border-color: var(--accent2);
+    background: var(--bg3);
+  }
+
+  .attune-item.active {
+    border-color: var(--accent);
+    background: var(--accent3);
+  }
+
+  .attune-name {
+    font-size: 10px;
+    color: var(--text);
+    display: block;
+    font-weight: 700;
+  }
+
+  .attune-hz {
+    font-size: 9px;
+    color: var(--text3);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .attune-item.active .attune-hz {
+    color: var(--accent2);
+  }
+
+  .noise-toggle {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .toggle-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .toggle-btn:hover { border-color: var(--border2); color: var(--text); }
+  .toggle-btn.on { border-color: var(--accent); color: var(--accent); background: var(--accent3); }
+
+  .info-strip {
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.8;
+  }
+
+  .state-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    transition: all 0.3s;
+  }
+
+  .state-badge.active-state {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent3);
+  }
+
+  .headphone-warning {
+    background: var(--bg3);
+    border: 1px solid var(--warn2);
+    padding: 8px 12px;
+    font-size: 10px;
+    color: var(--warn);
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0;
+  }
+
+  .carrier-display {
+    display: flex;
+    gap: 20px;
+    align-items: baseline;
+    padding: 10px 0;
+  }
+
+  .ear-label {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .ear-hz {
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .ear-div {
+    font-size: 18px;
+    color: var(--text3);
+  }
+
+  .footer-note {
+    padding: 16px 40px;
+    border-top: 1px solid var(--border);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+    line-height: 1.8;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Audio Shear Zone</div>
+  </div>
+  <div>
+    <div class="header-sub">Myathe Magick System — Binaural Attunement Engine</div>
+  </div>
+</div>
+
+<div class="rift-vis">
+  <canvas id="riftCanvas"></canvas>
+</div>
+
+<div class="main">
+
+  <div class="sidebar">
+    <div>
+      <div class="panel-label">Brainwave Presets</div>
+      <div class="preset-grid" id="presetGrid">
+        <button class="preset-btn" onclick="applyPreset(0.5, 'Delta I')">
+          <span class="pname">Delta I</span>
+          <span class="phz">0.5 Hz · deep repair</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(2, 'Delta II')">
+          <span class="pname">Delta II</span>
+          <span class="phz">2 Hz · deep sleep</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(4, 'Theta I')">
+          <span class="pname">Theta I</span>
+          <span class="phz">4 Hz · drowsy/trance</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(6, 'Theta II')">
+          <span class="pname">Theta II</span>
+          <span class="phz">6 Hz · imagery/dream</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(7.83, 'Schumann')">
+          <span class="pname">Schumann</span>
+          <span class="phz">7.83 Hz · earth pulse</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(10, 'Alpha I')">
+          <span class="pname">Alpha I</span>
+          <span class="phz">10 Hz · relaxed focus</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(12, 'Alpha II')">
+          <span class="pname">Alpha II</span>
+          <span class="phz">12 Hz · conscious</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(16, 'Beta I')">
+          <span class="pname">Beta I</span>
+          <span class="phz">16 Hz · focus</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(24, 'Beta II')">
+          <span class="pname">Beta II</span>
+          <span class="phz">24 Hz · active</span>
+        </button>
+        <button class="preset-btn" onclick="applyPreset(40, 'Gamma')">
+          <span class="pname">Gamma</span>
+          <span class="phz">40 Hz · insight/binding</span>
+        </button>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div>
+      <div class="panel-label">Solfeggio / Sacred</div>
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="applyCarrierPreset(174)">
+          <span class="pname">174 Hz</span>
+          <span class="phz">grounding</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(285)">
+          <span class="pname">285 Hz</span>
+          <span class="phz">tissue/field</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(396)">
+          <span class="pname">396 Hz</span>
+          <span class="phz">guilt → joy</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(417)">
+          <span class="pname">417 Hz</span>
+          <span class="phz">change</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(432)">
+          <span class="pname">432 Hz</span>
+          <span class="phz">natural tuning</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(528)">
+          <span class="pname">528 Hz</span>
+          <span class="phz">miracle / DNA</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(639)">
+          <span class="pname">639 Hz</span>
+          <span class="phz">connection</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(741)">
+          <span class="pname">741 Hz</span>
+          <span class="phz">expression</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(852)">
+          <span class="pname">852 Hz</span>
+          <span class="phz">intuition</span>
+        </button>
+        <button class="preset-btn" onclick="applyCarrierPreset(963)">
+          <span class="pname">963 Hz</span>
+          <span class="phz">crown/unity</span>
+        </button>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div>
+      <div class="panel-label">Noise Bed</div>
+      <div class="noise-toggle">
+        <button class="toggle-btn" id="pinkBtn" onclick="toggleNoise('pink')">Pink</button>
+        <button class="toggle-btn" id="brownBtn" onclick="toggleNoise('brown')">Brown</button>
+        <button class="toggle-btn" id="whiteBtn" onclick="toggleNoise('white')">White</button>
+      </div>
+      <div class="control-row" style="margin-top:10px;">
+        <span class="ctrl-label">Noise vol</span>
+        <input type="range" id="noiseVol" min="0" max="100" value="0" step="1" oninput="updateNoiseVol(this.value)">
+        <span class="ctrl-value" id="noiseVolVal">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="headphone-warning">
+      ⚠ Headphones required. Binaural beats are an auditory illusion created by the brain — they require stereo separation. Speakers deliver both tones to both ears and cannot produce the effect.
+    </div>
+
+    <div class="big-display">
+      <div class="metric">
+        <div class="metric-val" id="beatHz">10.0</div>
+        <div class="metric-label">Beat frequency (Hz)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val deep" id="carrierHz">200.0</div>
+        <div class="metric-label">Carrier / base (Hz)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val warn" id="stateLabel">Alpha</div>
+        <div class="metric-label">Brain state</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Carrier display</div>
+      <div class="carrier-display">
+        <div>
+          <div class="ear-label">Left ear</div>
+          <div class="ear-hz" id="leftHz">200.0 Hz</div>
+        </div>
+        <div class="ear-div">↔</div>
+        <div>
+          <div class="ear-label">Right ear</div>
+          <div class="ear-hz" id="rightHz">210.0 Hz</div>
+        </div>
+        <div>
+          <div class="ear-label">Difference</div>
+          <div class="ear-hz" id="diffHz" style="color: var(--accent);">10.0 Hz</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Beat frequency — difference tone</div>
+      <div class="control-row">
+        <span class="ctrl-label">Beat Hz</span>
+        <input type="range" id="beatSlider" min="0.5" max="40" step="0.1" value="10" oninput="updateBeat(this.value)">
+        <span class="ctrl-value" id="beatVal">10.0 Hz</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Carrier frequency — base tone</div>
+      <div class="control-row">
+        <span class="ctrl-label">Carrier Hz</span>
+        <input type="range" id="carrierSlider" min="100" max="1000" step="1" value="200" oninput="updateCarrier(this.value)">
+        <span class="ctrl-value" id="carrierVal">200 Hz</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Volume</div>
+      <div class="control-row">
+        <span class="ctrl-label">Master vol</span>
+        <input type="range" id="volSlider" min="0" max="100" step="1" value="40" oninput="updateVol(this.value)">
+        <span class="ctrl-value" id="volVal">40%</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-label">Brainwave band map</div>
+      <div class="band-map" id="bandMap">
+        <div class="band-seg" id="seg-delta" style="width:10%; background:#1a1d22;">Δ Delta</div>
+        <div class="band-seg" id="seg-theta" style="width:17%; background:#1a1d28;">Θ Theta</div>
+        <div class="band-seg" id="seg-alpha" style="width:12%; background:#1a221f;">α Alpha</div>
+        <div class="band-seg" id="seg-beta"  style="width:31%; background:#1a1e22;">β Beta</div>
+        <div class="band-seg" id="seg-gamma" style="width:30%; background:#1a1a22;">γ Gamma</div>
+        <div class="band-indicator" id="bandIndicator"></div>
+      </div>
+    </div>
+
+    <div class="waveform-area">
+      <div class="panel-label" style="position:absolute;top:0;left:0;">Beat envelope</div>
+      <canvas id="waveCanvas" style="margin-top:16px; height:100px; width:100%;"></canvas>
+    </div>
+
+    <div class="transport">
+      <button class="play-btn" id="playBtn" onclick="togglePlay()">▶ ENGAGE SHEAR ZONE</button>
+      <button class="sweep-btn" id="sweepBtn" onclick="toggleSweep()">↻ Schumann Sweep</button>
+    </div>
+
+    <div class="info-strip" id="infoStrip">
+      State: <span class="state-badge active-state" id="stateBadge">Alpha · 8–12 Hz</span>&nbsp;&nbsp;
+      Relaxed alertness, creative receptivity, meditative onset. The carrier tone shapes timbre; the difference frequency is the entrainment target. Optimal perception range: carrier 200–500 Hz, beat difference 1–30 Hz.
+    </div>
+
+  </div>
+</div>
+
+<div class="footer-note">
+  Myathe Magick System — Audio Shear Zone tool. Binaural beats require stereo headphones; the illusory beat arises in the superior olivary complex of the brainstem when two closely spaced frequencies are presented separately per ear. The brain's frequency-following response tends to synchronize cortical oscillations toward the difference frequency. Carrier tone presets draw from Solfeggio tradition and Oster Curve recommendations. ⚠ Do not use while driving or operating machinery. Not a medical device.
+</div>
+
+<script>
+  let audioCtx = null;
+  let leftOsc = null, rightOsc = null;
+  let masterGain = null, leftPanner = null, rightPanner = null;
+  let noiseSource = null, noiseGain = null;
+  let playing = false;
+  let sweeping = false;
+  let sweepInterval = null;
+  let currentNoise = null;
+
+  let beatFreq = 10;
+  let carrierFreq = 200;
+  let volume = 0.40;
+  let noiseVol = 0;
+
+  const bands = [
+    { id: 'seg-delta', name: 'Delta', range: [0, 4],   label: 'Δ Delta · 0–4 Hz · deep sleep / restoration', color: '#3a3a6a' },
+    { id: 'seg-theta', name: 'Theta', range: [4, 8],   label: 'Θ Theta · 4–8 Hz · hypnagogic / dream / trance', color: '#3a4a6a' },
+    { id: 'seg-alpha', name: 'Alpha', range: [8, 12],  label: 'α Alpha · 8–12 Hz · relaxed alertness / creative', color: '#2a4a40' },
+    { id: 'seg-beta',  name: 'Beta',  range: [12, 30], label: 'β Beta · 12–30 Hz · focused cognition / active', color: '#3a3a4a' },
+    { id: 'seg-gamma', name: 'Gamma', range: [30, 100],label: 'γ Gamma · 30+ Hz · insight / neural binding', color: '#3a2a5a' },
+  ];
+
+  function getBand(hz) {
+    for (let b of bands) if (hz >= b.range[0] && hz < b.range[1]) return b;
+    return bands[4];
+  }
+
+  function updateUI() {
+    const beat = parseFloat(beatFreq).toFixed(1);
+    const carrier = parseInt(carrierFreq);
+    const left = carrier;
+    const right = (carrier + beatFreq).toFixed(1);
+
+    document.getElementById('beatHz').textContent = beat;
+    document.getElementById('carrierHz').textContent = carrier;
+    document.getElementById('beatVal').textContent = beat + ' Hz';
+    document.getElementById('carrierVal').textContent = carrier + ' Hz';
+    document.getElementById('leftHz').textContent = carrier.toFixed(1) + ' Hz';
+    document.getElementById('rightHz').textContent = parseFloat(right).toFixed(1) + ' Hz';
+    document.getElementById('diffHz').textContent = beat + ' Hz';
+
+    const band = getBand(beatFreq);
+    document.getElementById('stateLabel').textContent = band.name;
+    document.getElementById('stateBadge').textContent = band.label;
+
+    updateBandIndicator();
+    updateWaveform();
+    updateRift();
+  }
+
+  function updateBandIndicator() {
+    const maxHz = 40;
+    const pct = Math.min(beatFreq / maxHz, 1) * 100;
+    document.getElementById('bandIndicator').style.left = pct + '%';
+
+    bands.forEach(b => {
+      const el = document.getElementById(b.id);
+      const inBand = beatFreq >= b.range[0] && beatFreq < b.range[1];
+      el.classList.toggle('lit', inBand);
+      el.style.background = inBand ? b.color : '';
+    });
+  }
+
+  function updateBeat(val) {
+    beatFreq = parseFloat(val);
+    if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.05);
+    if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.05);
+    updateUI();
+  }
+
+  function updateCarrier(val) {
+    carrierFreq = parseFloat(val);
+    if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.05);
+    if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.05);
+    updateUI();
+  }
+
+  function updateVol(val) {
+    volume = val / 100;
+    document.getElementById('volVal').textContent = val + '%';
+    if (masterGain) masterGain.gain.setTargetAtTime(volume, audioCtx.currentTime, 0.05);
+  }
+
+  function updateNoiseVol(val) {
+    noiseVol = val / 100;
+    document.getElementById('noiseVolVal').textContent = val + '%';
+    if (noiseGain) noiseGain.gain.setTargetAtTime(noiseVol * 0.3, audioCtx.currentTime, 0.05);
+  }
+
+  function applyPreset(hz, name) {
+    beatFreq = hz;
+    document.getElementById('beatSlider').value = hz;
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.includes(name.split(' ')[0]) && b.textContent.includes(name.split(' ')[1] || name));
+    });
+    if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.05);
+    if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.05);
+    updateUI();
+  }
+
+  function applyCarrierPreset(hz) {
+    carrierFreq = hz;
+    document.getElementById('carrierSlider').value = hz;
+    if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.05);
+    if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.05);
+    updateUI();
+  }
+
+  function makeNoise(type) {
+    const bufSize = audioCtx.sampleRate * 4;
+    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    if (type === 'white') {
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    } else if (type === 'pink') {
+      let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+      for (let i = 0; i < bufSize; i++) {
+        const w = Math.random() * 2 - 1;
+        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+        b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+        b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+        data[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;
+        b6=w*0.115926;
+      }
+    } else {
+      let lastOut = 0;
+      for (let i = 0; i < bufSize; i++) {
+        const w = Math.random() * 2 - 1;
+        data[i] = (lastOut + 0.02 * w) / 1.02;
+        lastOut = data[i];
+        data[i] *= 3.5;
+      }
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    return src;
+  }
+
+  function toggleNoise(type) {
+    if (!audioCtx) initAudio();
+    if (noiseSource) { noiseSource.stop(); noiseSource.disconnect(); noiseSource = null; }
+
+    const btn = document.getElementById(type + 'Btn');
+    const wasOn = btn.classList.contains('on');
+    ['pinkBtn','brownBtn','whiteBtn'].forEach(id => document.getElementById(id).classList.remove('on'));
+
+    if (!wasOn) {
+      btn.classList.add('on');
+      currentNoise = type;
+      noiseSource = makeNoise(type);
+      noiseGain = audioCtx.createGain();
+      noiseGain.gain.value = noiseVol * 0.3;
+      noiseSource.connect(noiseGain);
+      noiseGain.connect(audioCtx.destination);
+      noiseSource.start();
+    } else {
+      currentNoise = null;
+    }
+  }
+
+  function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(audioCtx.destination);
+    noiseGain = audioCtx.createGain();
+    noiseGain.gain.value = 0;
+    noiseGain.connect(audioCtx.destination);
+  }
+
+  function togglePlay() {
+    if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const btn = document.getElementById('playBtn');
+    if (!playing) {
+      leftOsc = audioCtx.createOscillator();
+      rightOsc = audioCtx.createOscillator();
+      leftPanner = audioCtx.createStereoPanner();
+      rightPanner = audioCtx.createStereoPanner();
+
+      leftOsc.type = 'sine';
+      rightOsc.type = 'sine';
+      leftOsc.frequency.value = carrierFreq;
+      rightOsc.frequency.value = carrierFreq + beatFreq;
+      leftPanner.pan.value = -1;
+      rightPanner.pan.value = 1;
+
+      leftOsc.connect(leftPanner).connect(masterGain);
+      rightOsc.connect(rightPanner).connect(masterGain);
+      leftOsc.start();
+      rightOsc.start();
+      playing = true;
+      btn.textContent = '■ COLLAPSE SHEAR ZONE';
+      btn.classList.add('playing');
+    } else {
+      leftOsc.stop(); rightOsc.stop();
+      leftOsc.disconnect(); rightOsc.disconnect();
+      leftOsc = null; rightOsc = null;
+      playing = false;
+      btn.textContent = '▶ ENGAGE SHEAR ZONE';
+      btn.classList.remove('playing');
+    }
+  }
+
+  function toggleSweep() {
+    const btn = document.getElementById('sweepBtn');
+    if (!sweeping) {
+      sweeping = true;
+      btn.classList.add('active');
+      btn.textContent = '■ Stop Sweep';
+      let dir = 1;
+      let current = parseFloat(document.getElementById('beatSlider').value);
+      sweepInterval = setInterval(() => {
+        current += dir * 0.05;
+        if (current >= 12) dir = -1;
+        if (current <= 4) dir = 1;
+        beatFreq = current;
+        document.getElementById('beatSlider').value = current;
+        if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.02);
+        if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.02);
+        updateUI();
+      }, 50);
+    } else {
+      sweeping = false;
+      clearInterval(sweepInterval);
+      btn.classList.remove('active');
+      btn.textContent = '↻ Schumann Sweep';
+    }
+  }
+
+  // Waveform visualization
+  function updateWaveform() {
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#4ab8a0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+
+    const periods = Math.min(beatFreq * 2, 20);
+    const samplesPerCycle = w / periods;
+
+    for (let x = 0; x < w; x++) {
+      const t = x / w;
+      const env = Math.sin(2 * Math.PI * beatFreq * t);
+      const carrier = Math.sin(2 * Math.PI * carrierFreq * t * 0.002);
+      const y = h/2 + (h * 0.38) * env * (0.5 + 0.5 * carrier);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#2a7a68';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    for (let x = 0; x < w; x++) {
+      const t = x / w;
+      const y = h/2 + (h * 0.38) * Math.sin(2 * Math.PI * beatFreq * t);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Rift visualization
+  let riftAnim;
+  let riftPhase = 0;
+  function updateRift() {
+    const canvas = document.getElementById('riftCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const bands2 = 6;
+    for (let i = 0; i < bands2; i++) {
+      const intensity = playing ? 1 : 0.3;
+      const freq = (beatFreq * (1 + i * 0.3)) * 0.01;
+      const amp = (h * 0.12) * intensity;
+      const alpha = (0.15 - i * 0.02) * intensity;
+      ctx.strokeStyle = `rgba(74, 184, 160, ${alpha})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        const y = h/2 + amp * Math.sin(2 * Math.PI * (x/w * freq * 8 + riftPhase * (1 + i*0.1)));
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = `rgba(74, 184, 160, ${playing ? 0.6 : 0.2})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 12]);
+    ctx.beginPath();
+    ctx.moveTo(0, h/2);
+    ctx.lineTo(w, h/2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function riftAnimate() {
+    riftPhase += playing ? (beatFreq * 0.0003) : 0.0001;
+    updateRift();
+    requestAnimationFrame(riftAnimate);
+  }
+
+  updateUI();
+  riftAnimate();
+  setInterval(() => { if (playing) updateWaveform(); }, 100);
+</script>
+</body>
+</html>
