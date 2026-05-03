@@ -723,6 +723,7 @@
   let playing = false;
   let sweeping = false;
   let sweepInterval = null;
+  let preSweepBeat = null;
   let currentNoise = null;
 
   let beatFreq = 10;
@@ -931,9 +932,14 @@
       sweeping = true;
       btn.classList.add('active');
       btn.textContent = '■ Stop Sweep';
-      const preSweepBeat = beatFreq;
+      preSweepBeat = beatFreq;
       let dir = 1;
-      let current = parseFloat(document.getElementById('beatSlider').value);
+      let current = 4;
+      beatFreq = current;
+      document.getElementById('beatSlider').value = current;
+      if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.02);
+      if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + current, audioCtx.currentTime, 0.02);
+      updateUI();
       sweepInterval = setInterval(() => {
         current += dir * 0.05;
         if (current >= 12) dir = -1;
@@ -944,19 +950,18 @@
         if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.02);
         updateUI();
       }, 50);
-      sweepInterval._preSweepBeat = preSweepBeat;
     } else {
       sweeping = false;
-      const restore = sweepInterval._preSweepBeat;
       clearInterval(sweepInterval);
       btn.classList.remove('active');
       btn.textContent = '↻ Schumann Sweep';
-      if (restore !== undefined) {
-        beatFreq = restore;
-        document.getElementById('beatSlider').value = restore;
+      if (preSweepBeat !== null) {
+        beatFreq = preSweepBeat;
+        document.getElementById('beatSlider').value = preSweepBeat;
         if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.1);
         if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.1);
         updateUI();
+        preSweepBeat = null;
       }
     }
   }
