@@ -13,7 +13,7 @@ The tool has four independent layers that can be used together or separately:
 
 All four layers run simultaneously through their own gain controls, so you can build up a full layered session or strip it back to a single element.
 
-→ [Live tool](https://[your-github-username].github.io/audio-shear-zone/)
+→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/)
 
 ---
 
@@ -184,4 +184,4 @@ The Solfeggio carrier frequencies are drawn from esoteric tradition. Their speci
 
 This tool is one node in a suite of interactive research and attunement applications developed alongside the Myathe Magick System — a comprehensive theoretical framework synthesizing torsion field physics, sacred geometry, Kabbalistic cosmology, chaos magick, Mayan cosmology, Jungian psychology, mycorrhizal biology, and archaeoastronomy.
 
-→ [Myathe Magick YouTube channel](https://youtube.com/@MyatheMagick)
+→ [Myathe Magick YouTube channel](https://www.youtube.com/channel/UClWbNxQMrx-XB3h8xXh_oxQ)
