@@ -4,7 +4,7 @@
 
 An interactive binaural beat generator for brainwave entrainment, carrier tone selection, and consciousness-state attunement. Built as a standalone HTML tool — no dependencies, no install. Drop it in any static host.
 
-→ [Live tool](https://[your-github-username].github.io/audio-shear-zone/)
+→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/)
 
 ---
 
@@ -101,4 +101,4 @@ The Solfeggio carrier frequencies are drawn from esoteric tradition. Their speci
 
 This tool is one node in a suite of interactive research and attunement applications developed in parallel with the Myathe Magick System document — a comprehensive theoretical framework synthesizing torsion field physics, sacred geometry, Kabbalistic cosmology, chaos magick, Mayan cosmology, Jungian psychology, and archaeoastronomy.
 
-→ [Myathe Magick YouTube channel](https://youtube.com/@MyatheMagick)
+→ [Myathe Magick YouTube channel](https://www.youtube.com/channel/UClWbNxQMrx-XB3h8xXh_oxQ)
