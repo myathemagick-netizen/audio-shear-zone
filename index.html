@@ -332,7 +332,7 @@
         <div class="sr-status-row">
           <div class="sr-stat">
             <div class="sr-stat-val" id="srKp">—</div>
-            <div class="sr-stat-lbl">Kp Index</div>
+            <div class="sr-stat-lbl">Kp Index (3hr)</div>
             <div class="kp-bar"><div class="kp-fill" id="srKpBar" style="width:0%"></div></div>
           </div>
           <div class="sr-stat">
@@ -942,19 +942,20 @@ async function srFetchLive() {
   } catch(e) {}
 
   // Update space weather display — each independently
-  document.getElementById('srKp').textContent = isNaN(kp) ? '—' : kp.toFixed(1);
+  document.getElementById('srKp').textContent = isNaN(kp) ? '3hr delay' : kp.toFixed(1);
   document.getElementById('srSolar').textContent = isNaN(swSpeed) ? '—' : Math.round(swSpeed);
   document.getElementById('srBt').textContent = bt;
   document.getElementById('srTime').textContent = new Date().toUTCString().slice(17, 22);
 
-  if (!isNaN(kp)) {
-    const kpBar = document.getElementById('srKpBar');
-    kpBar.style.width = Math.min((kp / 9) * 100, 100) + '%';
-    kpBar.style.background = kp >= 7 ? '#c83a3a' : kp >= 4 ? 'var(--warn)' : 'var(--accent)';
-    let fieldState = kp >= 7 ? 'Storm' : kp >= 5 ? 'Active' : kp >= 3 ? 'Unsettled' : 'Quiet';
-    document.getElementById('srField').textContent = fieldState;
-    srUpdateAmplitudesFromKp(kp);
-  }
+  // Field state always shows — defaults to Quiet if Kp unavailable (updated every 3hrs)
+  const kpForState = isNaN(kp) ? 1 : kp;
+  const kpBar = document.getElementById('srKpBar');
+  kpBar.style.width = Math.min((kpForState / 9) * 100, 100) + '%';
+  kpBar.style.background = kpForState >= 7 ? '#c83a3a' : kpForState >= 4 ? 'var(--warn)' : 'var(--accent)';
+  let fieldState = kpForState >= 7 ? 'Storm' : kpForState >= 5 ? 'Active' : kpForState >= 3 ? 'Unsettled' : 'Quiet';
+  if (isNaN(kp)) fieldState = 'Quiet*';
+  document.getElementById('srField').textContent = fieldState;
+  srUpdateAmplitudesFromKp(kpForState);
 
   // Compute live SR1 — use Kp if available, fall back to time-of-day drift only
   // Either way we ALWAYS produce a live value after a fetch attempt
