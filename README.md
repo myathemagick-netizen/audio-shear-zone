@@ -14,7 +14,7 @@ The tool has five independent layers that can be used together or separately:
 
 All layers run simultaneously through their own gain controls, so you can build up a full layered session or strip it back to a single element.
 
-→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/))
+→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/)
 
 ---
 
