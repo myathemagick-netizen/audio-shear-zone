@@ -119,6 +119,22 @@
   .sr-manual-btn:hover{border-color:var(--accent2);color:var(--text);}
   .sr-fetch-status{font-size:9px;min-height:14px;margin-top:6px;}
   .sr-note{font-size:9px;color:var(--text3);line-height:1.7;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+
+  /* SESSION PRESETS DROPDOWN */
+  .preset-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);flex-wrap:wrap;}
+  .preset-bar-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);white-space:nowrap;}
+  .preset-select{background:var(--bg);border:1px solid var(--border2);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:6px 10px;flex:1;min-width:200px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;}
+  .preset-select:focus{border-color:var(--accent2);}
+  .preset-select option{background:var(--bg2);color:var(--text);}
+  .preset-select optgroup{background:var(--bg3);color:var(--text3);font-style:normal;letter-spacing:1px;}
+  .preset-load-btn{background:var(--bg2);border:1px solid var(--accent);color:var(--accent);padding:7px 18px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;transition:all 0.12s;white-space:nowrap;}
+  .preset-load-btn:hover{background:var(--accent3);}
+  .preset-desc{font-size:9px;color:var(--text3);padding:6px 0 0;width:100%;line-height:1.6;display:none;}
+  .preset-desc.visible{display:block;}
+
+  /* PANIC BUTTON */
+  .panic-btn{background:transparent;border:1px solid var(--warn2);color:var(--text3);padding:11px 20px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;transition:all 0.2s;}
+  .panic-btn:hover{border-color:var(--warn);color:var(--warn);background:rgba(200,116,58,0.08);}
 </style>
 </head>
 <body>
@@ -165,6 +181,56 @@
   </div>
 
   <div class="content">
+
+    <!-- SESSION PRESETS -->
+    <div class="preset-bar">
+      <span class="preset-bar-label">Session Preset</span>
+      <select class="preset-select" id="sessionSelect">
+        <option value="">— select a preset —</option>
+
+        <optgroup label="── CRYSTAL PATH / CHAKRA ──">
+          <option value="cp_logos">Logos / Shadow / Root</option>
+          <option value="cp_bios">Bios / Body / Sacral</option>
+          <option value="cp_pathos">Pathos / Heart / Solar Plexus</option>
+          <option value="cp_noos">Noos / Mind / Heart</option>
+          <option value="cp_ethos">Ethos / Will / Throat</option>
+          <option value="cp_cosmos">Cosmos / Light / Third Eye</option>
+          <option value="cp_chaos">Chaos / Spirit / Crown</option>
+        </optgroup>
+
+        <optgroup label="── GATEWAY TAPES ──">
+          <option value="gw_f10">Focus 10 — Mind Awake / Body Asleep</option>
+          <option value="gw_f12">Focus 12 — Expanded Awareness</option>
+          <option value="gw_f15">Focus 15 — No Time</option>
+          <option value="gw_f21">Focus 21 — The Bridge</option>
+        </optgroup>
+
+        <optgroup label="── COMBINING LAYERS ──">
+          <option value="cl_trance">Deep Trance</option>
+          <option value="cl_theta">Theta Incubation</option>
+          <option value="cl_focus">Alpha Focus</option>
+          <option value="cl_ritual">Ceremonial / Ritual</option>
+          <option value="cl_iso">Isochronic Stack</option>
+        </optgroup>
+
+        <optgroup label="── GENERAL ──">
+          <option value="gn_sleep">Deep Sleep</option>
+          <option value="gn_lucid">Lucid Dream Entry</option>
+          <option value="gn_creative">Creative Flow</option>
+          <option value="gn_focus">Sharp Focus</option>
+          <option value="gn_ground">Grounding</option>
+          <option value="gn_stress">Stress Release</option>
+        </optgroup>
+
+        <optgroup label="── LIVE EARTH ──">
+          <option value="le_base">Schumann Baseline</option>
+          <option value="le_storm">Planetary Storm Mode</option>
+        </optgroup>
+      </select>
+      <button class="preset-load-btn" id="presetLoadBtn">▶ Load</button>
+      <div class="preset-desc" id="presetDesc"></div>
+    </div>
+
     <div class="warn-box">⚠ Headphones required — speakers cannot produce binaural beats. Each ear must receive its tone in isolation.</div>
 
     <div class="big-display">
@@ -231,6 +297,7 @@
     <div class="transport">
       <button class="play-btn" id="playBtn" onclick="togglePlay()">▶ ENGAGE SHEAR ZONE</button>
       <button class="sweep-btn" id="sweepBtn" onclick="toggleSweep()">↻ Schumann Sweep</button>
+      <button class="panic-btn" id="panicBtn" onclick="panicStop()">◼ End Session</button>
     </div>
 
     <div class="info-strip">
@@ -781,6 +848,38 @@ function riftLoop(){
 updateUI(); riftLoop();
 setInterval(()=>{if(playing) updateWaveform();},120);
 
+// ── SESSION PRESETS ───────────────────────────────────────────
+const SESSION_PRESETS = {
+  cp_logos:  {name:'Logos / Shadow / Root',        beat:0.5,  carrier:396, noise:'brown', env:'cave',    harm:['heart'],         desc:"The densest principle — shadow, foundation, matter. Delta oscillation at the base of the axis. Brown noise and cave resonance, grounded in the heartbeat."},
+  cp_bios:   {name:'Bios / Body / Sacral',          beat:2,    carrier:417, noise:'brown', env:'ocean',   harm:['heart','drone'], desc:"The body and its rhythms. Deep delta, tidal ocean breath, drone locked to carrier. Two heartbeats — biological and tonal."},
+  cp_pathos: {name:'Pathos / Heart / Solar Plexus', beat:4,    carrier:528, noise:'pink',  env:'fire',    harm:['om'],            desc:"Emotion, feeling, will-to-connect. Theta onset with the transformation tone. Fire environment, OM pulse breathing underneath."},
+  cp_noos:   {name:'Noos / Mind / Heart Chakra',    beat:6,    carrier:639, noise:'grey',  env:'wind',    harm:['bowl'],          desc:"The mind as relational field. Mid-theta, connection carrier, grey noise as psychoacoustic neutral ground. Singing bowl marks time."},
+  cp_ethos:  {name:'Ethos / Will / Throat',         beat:10,   carrier:741, noise:'blue',  env:'rain',    harm:['iso','drone'],   desc:"Directed will and expression. Alpha with blue noise — articulate, bright. Rain as discrete-within-continuous. Isochronic pulse reinforces the entrainment."},
+  cp_cosmos: {name:'Cosmos / Light / Third Eye',    beat:12,   carrier:852, noise:'pink',  env:null,      harm:['om','bowl'],     desc:"Expanded perception, inner light. High alpha, no environment — turned fully inward. OM and singing bowl as the only acoustic reference."},
+  cp_chaos:  {name:'Chaos / Spirit / Crown',        beat:28,   carrier:963, noise:'grey',  env:null,      harm:['wand'],          desc:"The highest principle — unity, dissolution of boundary. High beta approaching gamma. No environment, only grey noise and the wind wand spinning at the edge of coherence."},
+
+  gw_f10: {name:'Focus 10 — Mind Awake / Body Asleep', beat:10,  carrier:396, noise:'pink',  env:'cave',    harm:['om'],            desc:"Monroe Institute foundation level. Alpha with OM resonant tuning — run OM first, then engage tone. Pink noise bed as per the original tape structure. ~400 Hz carrier range."},
+  gw_f12: {name:'Focus 12 — Expanded Awareness',        beat:6,   carrier:396, noise:'pink',  env:null,      harm:['om','bowl'],     desc:"Deep meditation, internal imagery. Theta II with cycling singing bowl mimicking the tapes recurring tonal structures."},
+  gw_f15: {name:'Focus 15 — No Time',                   beat:4,   carrier:285, noise:'pink',  env:'ocean',   harm:['om','drone'],    desc:"Dissolution of linear time sense. Theta I, tidal ocean rhythm reinforcing the collapse of sequential experience."},
+  gw_f21: {name:'Focus 21 — The Bridge',                beat:2,   carrier:174, noise:'brown', env:'thunder', harm:['drone','heart'], desc:"Edge of time-space perception. Deep delta, lowest carrier, subsonic thunder, biological heartbeat anchor. The deepest accessible Focus Level."},
+
+  cl_trance:  {name:'Deep Trance',         beat:2,    carrier:174, noise:'brown', env:'ocean',   harm:['heart'],         desc:"Delta II, tidal ocean, heartbeat. Biological rhythm layering around the entrainment target."},
+  cl_theta:   {name:'Theta Incubation',    beat:7.83, carrier:285, noise:'pink',  env:'wind',    harm:['om'],            desc:"Schumann resonance frequency, wind environment, OM pulse. A living acoustic container at the earth-resonance frequency."},
+  cl_focus:   {name:'Alpha Focus',         beat:10,   carrier:432, noise:'pink',  env:null,      harm:['drone'],         desc:"Alpha I, natural tuning carrier, pink noise, drone locked harmonically to carrier. Clean and sustained."},
+  cl_ritual:  {name:'Ceremonial / Ritual', beat:6,    carrier:528, noise:'pink',  env:null,      harm:['bowl','wand'],   desc:"Theta II, transformation carrier, singing bowl cycling, wind wand spinning. Strong esoteric character."},
+  cl_iso:     {name:'Isochronic Stack',    beat:10,   carrier:396, noise:'pink',  env:null,      harm:['iso','drone'],   desc:"Binaural beats and isochronic pulses simultaneously at the same beat frequency. Two entrainment mechanisms, one target."},
+
+  gn_sleep:    {name:'Deep Sleep',        beat:0.5,  carrier:174, noise:'brown', env:null,      harm:['heart'],         desc:"Delta I, lowest carrier, warm brown noise, heartbeat. For sleep onset and deep physical restoration."},
+  gn_lucid:    {name:'Lucid Dream Entry', beat:4,    carrier:285, noise:'pink',  env:null,      harm:['om'],            desc:"Theta I at the hypnagogic threshold. OM pulse as the single tonal anchor into dream-logic territory."},
+  gn_creative: {name:'Creative Flow',     beat:10,   carrier:432, noise:'pink',  env:null,      harm:['bowl'],          desc:"Alpha I with natural tuning. Singing bowl marks time without demanding attention. Open, receptive, generative."},
+  gn_focus:    {name:'Sharp Focus',       beat:16,   carrier:396, noise:'grey',  env:null,      harm:['iso'],           desc:"Beta I with isochronic reinforcement. Grey noise as psychoacoustic neutral. For sustained cognitive work."},
+  gn_ground:   {name:'Grounding',         beat:2,    carrier:174, noise:'brown', env:'cave',    harm:['heart','drone'], desc:"Deep delta, lowest carrier, cave resonance, heartbeat and drone. Maximum grounding configuration."},
+  gn_stress:   {name:'Stress Release',    beat:10,   carrier:528, noise:'pink',  env:'ocean',   harm:['om'],            desc:"Alpha I with transformation carrier, tidal ocean, OM pulse. Gentle downregulation from an activated state."},
+
+  le_base:  {name:'Schumann Baseline',    beat:7.83, carrier:285, noise:'pink',  env:'cave',    harm:['om'],            desc:"SR1 baseline frequency locked. Cave environment, OM pulse, 285 Hz carrier. Stable planetary attunement. Fetch live data and lock SR1 for full effect."},
+  le_storm: {name:'Planetary Storm Mode', beat:7.83, carrier:174, noise:'brown', env:'thunder', harm:['drone'],         desc:"For high-Kp geomagnetic events. Fetch live data first and lock live SR1. Lowest carrier, thunder environment, drone. The most electromagnetically active conditions."},
+};
+
 // ── EARTH SYNC ────────────────────────────────────────────────
 // Baseline harmonics — always stable, never NaN, always clickable
 const SR_BASELINE = [
@@ -1008,6 +1107,198 @@ function srToggleAuto() {
 
 // init grid on load — baseline values only, no fetch, no NaN possible
 srBuildGrid();
+
+function previewPreset(key) {
+  const desc = document.getElementById('presetDesc');
+  if (!key || !SESSION_PRESETS[key]) { desc.classList.remove('visible'); return; }
+  desc.textContent = SESSION_PRESETS[key].desc;
+  desc.classList.add('visible');
+}
+
+function loadSelectedPreset() {
+  const key = document.getElementById('sessionSelect').value;
+  if (!key || !SESSION_PRESETS[key]) return;
+  applyFullPreset(SESSION_PRESETS[key], key);
+}
+
+function applyFullPreset(p, key) {
+  ensureCtx();
+
+  // Beat
+  beatFreq = p.beat;
+  document.getElementById('beatSlider').value = p.beat;
+
+  // Carrier
+  carrierFreq = p.carrier;
+  document.getElementById('carrierSlider').value = p.carrier;
+  if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.3);
+  if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.3);
+
+  // Clear sidebar highlights
+  document.querySelectorAll('#presetGrid .preset-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#carrierGrid .preset-btn').forEach(b => b.classList.remove('active'));
+
+  // Noise
+  if (noiseNode) { try { noiseNode.stop(); } catch(e) {} noiseNode.disconnect(); noiseNode = null; }
+  ['white','pink','brown','blue','violet','grey'].forEach(t => {
+    const el = document.getElementById('nb-'+t);
+    if (el) el.classList.remove('on');
+  });
+  activeNoise = null;
+  if (p.noise) {
+    activeNoise = p.noise;
+    const el = document.getElementById('nb-'+p.noise);
+    if (el) el.classList.add('on');
+    noiseNode = makeNoiseBuf(p.noise);
+    noiseNode.connect(noiseGainNode);
+    noiseNode.start();
+    if (noiseVol === 0) {
+      noiseVol = 0.35;
+      document.getElementById('noiseVolSlider').value = 35;
+      document.getElementById('noiseVolVal').textContent = '35%';
+      noiseGainNode.gain.setTargetAtTime(noiseVol * 0.35, audioCtx.currentTime, 0.1);
+    }
+  }
+
+  // Env
+  if (envNode) { try { envNode.stop(); } catch(e) {} envNode = null; }
+  ['rain','ocean','wind','fire','thunder','cave'].forEach(t => {
+    const el = document.getElementById('eb-'+t);
+    if (el) el.classList.remove('on');
+  });
+  activeEnv = null;
+  if (p.env) {
+    activeEnv = p.env;
+    envNode = makeEnvSound(p.env);
+    const el = document.getElementById('eb-'+p.env);
+    if (el) el.classList.add('on');
+    if (envVol === 0) {
+      envVol = 0.5;
+      document.getElementById('envVolSlider').value = 50;
+      document.getElementById('envVolVal').textContent = '50%';
+      envGainNode.gain.setTargetAtTime(envVol * 0.4, audioCtx.currentTime, 0.1);
+    }
+  }
+
+  // Harmonics — stop all, start preset ones
+  Object.keys(activeHarm).forEach(t => {
+    if (activeHarm[t]) { try { activeHarm[t].stop(); } catch(e) {} delete activeHarm[t]; }
+    const el = document.getElementById('hb-'+t);
+    if (el) el.classList.remove('on');
+  });
+  document.getElementById('wandDisplay').style.display = 'none';
+  document.getElementById('wandSpeedRow').style.display = 'none';
+
+  if (p.harm && p.harm.length > 0) {
+    if (harmVol === 0) {
+      harmVol = 0.5;
+      document.getElementById('harmVolSlider').value = 50;
+      document.getElementById('harmVolVal').textContent = '50%';
+      harmGainNode.gain.setTargetAtTime(harmVol * 0.4, audioCtx.currentTime, 0.1);
+    }
+    p.harm.forEach(t => {
+      activeHarm[t] = makeHarmSound(t);
+      const el = document.getElementById('hb-'+t);
+      if (el) el.classList.add('on');
+      if (t === 'wand') {
+        document.getElementById('wandDisplay').style.display = 'block';
+        document.getElementById('wandSpeedRow').style.display = 'flex';
+        animateWand();
+      }
+    });
+  }
+
+  // Auto-start tone if not playing
+  if (!playing) togglePlay();
+
+  updateUI();
+
+  // Open Earth Sync accordion for Live Earth presets
+  if (key === 'le_base' || key === 'le_storm') {
+    const body = document.getElementById('acc-body-earth');
+    const hdr = document.getElementById('acc-hdr-earth');
+    if (body && !body.classList.contains('open')) {
+      body.classList.add('open');
+      if (hdr) hdr.classList.add('open');
+    }
+  }
+}
+
+
+// ── PANIC / END SESSION ───────────────────────────────────────
+function panicStop() {
+  // Stop binaural tone
+  if (playing) {
+    try { leftOsc.stop(); rightOsc.stop(); leftOsc.disconnect(); rightOsc.disconnect(); } catch(e) {}
+    leftOsc = null; rightOsc = null; playing = false;
+    const pb = document.getElementById('playBtn');
+    if (pb) { pb.textContent = '▶ ENGAGE SHEAR ZONE'; pb.classList.remove('playing'); }
+  }
+
+  // Stop sweep
+  if (sweeping) {
+    sweeping = false;
+    clearInterval(sweepInterval);
+    preSweepBeat = null;
+    const sb = document.getElementById('sweepBtn');
+    if (sb) { sb.classList.remove('active'); sb.textContent = '↻ Schumann Sweep'; }
+  }
+
+  // Stop noise
+  if (noiseNode) { try { noiseNode.stop(); noiseNode.disconnect(); } catch(e) {} noiseNode = null; }
+  activeNoise = null;
+  ['white','pink','brown','blue','violet','grey'].forEach(t => {
+    const el = document.getElementById('nb-'+t);
+    if (el) el.classList.remove('on');
+  });
+
+  // Stop environmental
+  if (envNode) { try { envNode.stop(); } catch(e) {} envNode = null; }
+  activeEnv = null;
+  ['rain','ocean','wind','fire','thunder','cave'].forEach(t => {
+    const el = document.getElementById('eb-'+t);
+    if (el) el.classList.remove('on');
+  });
+
+  // Stop all harmonics
+  Object.keys(activeHarm).forEach(t => {
+    if (activeHarm[t]) { try { activeHarm[t].stop(); } catch(e) {} delete activeHarm[t]; }
+    const el = document.getElementById('hb-'+t);
+    if (el) el.classList.remove('on');
+  });
+  document.getElementById('wandDisplay').style.display = 'none';
+  document.getElementById('wandSpeedRow').style.display = 'none';
+
+  // Stop live earth auto-refresh
+  if (srAutoRefresh) {
+    srAutoRefresh = false;
+    clearInterval(srAutoInterval);
+    const ab = document.getElementById('srAutoBtn');
+    if (ab) { ab.textContent = '⟳ Auto-refresh off'; ab.classList.remove('live'); }
+  }
+  srLiveLocked = false;
+  srLockedBaseline = null;
+  const lb = document.getElementById('srLiveBtn');
+  if (lb) lb.classList.remove('live');
+  srBuildGrid();
+
+  // Reset volume sliders to zero for noise/env/harm
+  noiseVol = 0;
+  document.getElementById('noiseVolSlider').value = 0;
+  document.getElementById('noiseVolVal').textContent = '0%';
+  if (noiseGainNode) noiseGainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+
+  // Reset preset dropdown
+  document.getElementById('sessionSelect').value = '';
+  document.getElementById('presetDesc').classList.remove('visible');
+
+  // Suspend audio context to fully silence
+  if (audioCtx) audioCtx.suspend();
+}
+
+// Bind preset bar events after all functions are defined
+document.getElementById('sessionSelect').addEventListener('change', function(){ previewPreset(this.value); });
+document.getElementById('presetLoadBtn').addEventListener('click', loadSelectedPreset);
 
 </script>
 </body>
