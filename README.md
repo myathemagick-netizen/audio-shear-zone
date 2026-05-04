@@ -4,16 +4,17 @@
 
 A full acoustic environment builder for consciousness-state attunement, built on the Web Audio API. No dependencies, no install — one standalone HTML file. Drop it in any static host or open it locally in a browser.
 
-The tool has four independent layers that can be used together or separately:
+The tool has five independent layers that can be used together or separately:
 
 - **Binaural tone generator** — the core entrainment engine
 - **Noise color bed** — spectral texture and environmental masking
 - **Environmental sounds** — immersive acoustic atmosphere
 - **Resonant & harmonic tones** — tuned frequencies and rhythmic structures
+- **Live Earth Sync** — real-time Schumann resonance and space weather attunement
 
-All four layers run simultaneously through their own gain controls, so you can build up a full layered session or strip it back to a single element.
+All layers run simultaneously through their own gain controls, so you can build up a full layered session or strip it back to a single element.
 
-→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/)
+→ [Live tool](https://[your-github-username].github.io/audio-shear-zone/)
 
 ---
 
@@ -142,6 +143,49 @@ The wind wand can run independently of the binaural layer, or alongside it — t
 
 ---
 
+## V. Live Earth Sync — Schumann Resonance
+
+The Live Earth Sync panel connects the tool to real-time planetary electromagnetic data, allowing you to tune the binaural beat frequency to the live state of the Earth-ionosphere cavity rather than a fixed preset value.
+
+### What the Schumann resonance is
+
+The Schumann resonances are standing electromagnetic waves in the cavity between the Earth's surface and the ionosphere, sustained continuously by global lightning activity — roughly 40–50 lightning strikes per second worldwide. The fundamental mode sits at approximately 7.83 Hz, with harmonics at 14.3, 20.8, 27.3, and 33.8 Hz. These are not fixed values — they drift with solar activity, geomagnetic conditions, and the daily rotation of the three major lightning centers (Africa, South America, Southeast Asia). The frequency typically varies within ±0.5 Hz of the baseline fundamental; the amplitude can spike dramatically during geomagnetic storms.
+
+This is not a static number to meditate to. It is a living signal reflecting the electromagnetic state of the planet in real time.
+
+### How the panel works
+
+**Stable baseline tiles (SR1–SR5)** — the five Schumann harmonic modes displayed as fixed reference values. SR1 (7.83 Hz) and SR2 (14.3 Hz) fall within binaural beat perception range and lock the beat frequency when clicked. SR3, SR4, and SR5 (20.8, 27.3, 33.8 Hz) fall above the binaural threshold — clicking them sets the *carrier* frequency instead, which is a musically and physically meaningful use of those harmonics even though they cannot drive the beat engine directly.
+
+**Live SR1 value** — fetched from NOAA's space weather service and estimated from current geomagnetic conditions. After fetching, this shows a value like `7.71 Hz (est from Kp 2.3)` — the small drift from 7.83 is derived from the live Kp index and a time-of-day modulation based on the known daily cycle of the resonance. Click **Lock live SR1 to beat** to engage this value as the binaural beat frequency. If auto-refresh is enabled, the beat will drift slowly as the live value updates every five minutes.
+
+**Manual entry** — if live fetch is unavailable or you want to use a value you've read directly from a monitoring source, enter it in the manual field and click Set & lock. This engages the same live-lock mechanism as the fetched value.
+
+**Auto-refresh** — when enabled, the tool polls NOAA every five minutes and updates the live SR1 estimate and space weather display automatically. If the live lock is engaged, the binaural beat frequency will drift gently with the planet.
+
+### Space weather data displayed
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| **Kp Index (3hr)** | NOAA SWPC | Global geomagnetic activity index, 0–9 scale. Updated every 3 hours — may show `3hr delay` between updates. |
+| **Solar Wind km/s** | NOAA ACE/DSCOVR satellite | Updates every ~minute. Speed spikes indicate increased ionospheric pressure. |
+| **IMF Bt (nT)** | NOAA ACE/DSCOVR satellite | Interplanetary magnetic field strength in nanoTeslas. |
+| **Field State** | Derived from Kp | Quiet / Unsettled / Active / Storm. Defaults to `Quiet*` if Kp is between update cycles. |
+
+**Kp and what it means for your session:** a Kp of 0–2 is quiet, baseline conditions — the resonance is stable and amplitude bars show typical values. Kp 3–4 is unsettled — some elevation across harmonics, the higher modes become more active. Kp 5+ is geomagnetic storm territory — significant ionospheric disturbance, SR amplitude can spike substantially, and the resonance becomes more variable. These are also the moments considered most significant for planetary-scale attunement work.
+
+### For precise live amplitude data
+
+NOAA's public API provides frequency drift estimates but not live SR amplitude. For real-time amplitude monitoring, cross-reference:
+
+- [HeartMath Global Coherence Initiative](https://www.heartmath.org/gci/gcms/live-data/) — global magnetometer network, live SR amplitude charts
+- [schumannresonance.today](https://schumannresonance.today) — aggregated live SR data with frequency and amplitude display
+- [Tomsk State University spectrogram](http://sosrff.tsu.ru/) — raw spectrogram from Siberian monitoring station
+
+Read the current SR1 value from any of these and enter it manually for maximum precision.
+
+---
+
 ## Combining layers
 
 Some combinations that work well:
@@ -155,6 +199,66 @@ Some combinations that work well:
 **Ceremonial / ritual** — Any theta preset + 528 Hz carrier + Singing Bowl + Wind Wand. The bowl's recurring decay and the wand's spinning pitch modulation create an acoustic environment with strong esoteric character.
 
 **Isochronic + binaural stacking** — Isochronic and binaural beats are different entrainment mechanisms that reinforce each other. Isochronic pulses work through direct rhythmic neural entrainment and do not require headphones; binaural beats work through the frequency-following response and require stereo separation. Running both simultaneously at the same beat frequency produces a layered entrainment signal.
+
+**Live planetary session** — Fetch live space weather, lock live SR1 to beat, enable auto-refresh, set carrier to 285 Hz or 396 Hz, add Pink noise and Cave or Ocean environment. The beat frequency will drift slowly with the planet's actual electromagnetic state over the course of the session. During high-Kp events the amplitude bars will show elevated harmonic activity across SR3–SR5 — consider clicking SR3 to also shift the carrier toward 20.8 Hz, placing the entire session within the live harmonic structure of the resonance.
+
+---
+
+## Gateway Tapes configurations
+
+The Monroe Institute's Gateway Experience (1970s–present) is the most thoroughly documented audio-based consciousness research program, including a declassified 1983 CIA analysis. Monroe's Hemi-Sync technology is structurally identical to binaural beats — two tones, one per ear, difference frequency as the entrainment target — layered with pink and white noise and guided voice. The Focus Level system maps directly onto the brainwave bands used in this tool.
+
+### Monroe's Focus Level system
+
+| Focus Level | Description | Brainwave equivalent |
+|-------------|-------------|----------------------|
+| **Focus 10** | Mind Awake / Body Asleep — foundational altered state | Alpha (8–12 Hz) |
+| **Focus 12** | Expanded Awareness — deep meditation, internal imagery | Theta (4–8 Hz) |
+| **Focus 15** | No Time — dissolution of linear time sense | Deep Theta (4–6 Hz) |
+| **Focus 21** | The Bridge — edge of time-space perception | Theta/Delta boundary |
+| **Focus 27+** | Non-physical realities, expanded contact states | Delta + harmonics |
+
+Monroe's documented carrier frequency was approximately 400 Hz for Alpha-level work, making 396 Hz or 417 Hz from the Solfeggio grid the closest available presets.
+
+The acoustic structure of the original tapes, as described in the declassified CIA document, followed a specific sequence: first a **resonant tuning** step where the listener hums a sustained tone alongside a recorded chorus to bring mind and body into pre-entrainment resonance, then Hemi-Sync binaural tones introduced gradually, then pink and white noise added as a bed beneath the tones. This exact structure is reproducible in this tool — run OM Pulse first, then engage the binaural tone, then add Pink noise.
+
+### Recommended configurations by Focus Level
+
+**Focus 10 — Mind Awake / Body Asleep**
+- Beat: Alpha I (10 Hz)
+- Carrier: 396 Hz or 417 Hz (closest to Monroe's ~400 Hz)
+- Harmonic: OM Pulse first (resonant tuning step), then leave running
+- Noise: Pink at low volume
+- Environmental: Cave (isolation tank acoustic context) or none
+
+**Focus 12 — Expanded Awareness**
+- Beat: Theta II (6 Hz) or Schumann Sweep (cycles through the exact theta-alpha boundary the tapes are designed to cross)
+- Carrier: 285 Hz or 396 Hz
+- Harmonic: OM Pulse + Singing Bowl (the bowl's cycling decay mimics the recurring tonal structures of the tapes)
+- Noise: Pink at low-to-medium volume
+- Environmental: none, or Cave very quietly
+
+**Focus 15 — No Time**
+- Beat: Theta I (4 Hz)
+- Carrier: 285 Hz
+- Harmonic: OM Pulse + Drone
+- Noise: Pink fading into Brown
+- Environmental: Ocean (the slow tidal breath rhythm reinforces the dissolution of linear time sense)
+
+**Focus 21 and beyond — The Bridge**
+- Beat: Delta II (2 Hz) or Delta I (0.5 Hz)
+- Carrier: 174 Hz (lowest grounding carrier)
+- Harmonic: Drone + Heartbeat (the heartbeat provides a biological anchor at the deepest states; Monroe explicitly used pulse-like rhythms at the lower Focus Levels)
+- Noise: Brown
+- Environmental: Thunder very quietly (subsonic rumble consistent with isolation room conditions)
+
+### Notes on the Monroe approach
+
+The Gateway tapes are not just a sound file — they are a complete system with visualization techniques, breathing practices, and structured intention-setting before audio begins. The "Energy Conversion Box" is Monroe's method for mentally setting aside external concerns before a session; the resonant humming step is a physiological preparation, not decoration. Replicating the acoustic structure without the preparatory framework will produce a different (not necessarily lesser) experience.
+
+Monroe's later research expanded beyond standard binaural beats into amplitude modulation, phase modulation, and spatial audio techniques. The modern Hemi-Sync product line is considerably more sophisticated than the original tapes and incorporates over 50 variations of audio entrainment technology.
+
+The CIA's 1983 analysis ("Analysis and Assessment of the Gateway Process," Lt. Col. Wayne McDonnell) is publicly available via the National Archives and worth reading as a primary source — it is a serious attempt to understand the neurophysiological and quantum-mechanical basis of the technique, written by someone who had not previously encountered it and was trying to assess its intelligence applications.
 
 ---
 
@@ -178,10 +282,12 @@ EEG studies confirm that the brain produces a frequency-following response to bi
 
 The Solfeggio carrier frequencies are drawn from esoteric tradition. Their specific healing properties are not established in peer-reviewed literature. They are included here as tools for intentional attunement within the Myathe Magick System framework, not as medical claims.
 
+The Schumann resonance data is real geophysical data from NOAA's Space Weather Prediction Center. The live SR1 frequency estimate is derived from the Kp index and known daily variation patterns — it is an approximation, not a direct SR measurement. For precise amplitude data, use the HeartMath GCI or Tomsk monitoring links provided in the tool.
+
 ---
 
 ## Part of the Myathe Magick System
 
 This tool is one node in a suite of interactive research and attunement applications developed alongside the Myathe Magick System — a comprehensive theoretical framework synthesizing torsion field physics, sacred geometry, Kabbalistic cosmology, chaos magick, Mayan cosmology, Jungian psychology, mycorrhizal biology, and archaeoastronomy.
 
-→ [Myathe Magick YouTube channel](https://www.youtube.com/channel/UClWbNxQMrx-XB3h8xXh_oxQ)
+→ [Myathe Magick YouTube channel](https://youtube.com/@MyatheMagick)
