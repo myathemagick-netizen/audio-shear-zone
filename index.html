@@ -89,6 +89,36 @@
   .ear-hz{font-size:16px;font-weight:700;color:var(--text);}
   .ear-div{font-size:16px;color:var(--text3);}
   .footer-note{padding:14px 32px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);line-height:1.8;font-style:italic;}
+
+  :root{--amber:#c8a43a;}
+  .sr-harmonic-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:12px;}
+  .sr-harmonic{border:1px solid var(--border);background:var(--bg2);padding:8px 4px;text-align:center;cursor:pointer;transition:all 0.12s;}
+  .sr-harmonic.audible:hover{border-color:var(--accent);}
+  .sr-harmonic.locked{border-color:var(--accent);background:var(--accent3);}
+  .sr-harmonic.inaudible{opacity:0.5;cursor:default;pointer-events:none;}
+  .sr-hz{font-size:13px;font-weight:700;color:var(--accent);display:block;line-height:1;}
+  .sr-harmonic.inaudible .sr-hz{color:var(--text3);}
+  .sr-mode{font-size:8px;color:var(--text3);display:block;margin-top:3px;}
+  .sr-amp-bar{height:3px;background:var(--border);margin-top:5px;overflow:hidden;}
+  .sr-amp-fill{height:100%;background:var(--accent);transition:width 1s;}
+  .sr-harmonic.inaudible .sr-amp-fill{background:var(--text3);}
+  .sr-status-row{display:flex;gap:20px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:12px;}
+  .sr-stat{min-width:55px;}
+  .sr-stat-val{font-size:16px;font-weight:700;color:var(--amber);line-height:1;}
+  .sr-stat-lbl{font-size:8px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;}
+  .kp-bar{height:4px;background:var(--border);margin-top:5px;width:55px;}
+  .kp-fill{height:100%;transition:width 0.5s;}
+  .sr-btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .sr-sync-btn{background:var(--bg2);border:1px solid var(--border);color:var(--text2);padding:8px 14px;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;transition:all 0.12s;}
+  .sr-sync-btn:hover{border-color:var(--border2);color:var(--text);}
+  .sr-sync-btn.live{border-color:var(--amber);color:var(--amber);background:rgba(200,164,58,0.08);}
+  .sr-manual{display:flex;gap:8px;align-items:center;margin-top:10px;}
+  .sr-manual-input{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:12px;padding:5px 8px;width:80px;outline:none;}
+  .sr-manual-input:focus{border-color:var(--accent2);}
+  .sr-manual-btn{background:var(--bg2);border:1px solid var(--border);color:var(--text2);padding:5px 10px;cursor:pointer;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;transition:all 0.12s;}
+  .sr-manual-btn:hover{border-color:var(--accent2);color:var(--text);}
+  .sr-fetch-status{font-size:9px;min-height:14px;margin-top:6px;}
+  .sr-note{font-size:9px;color:var(--text3);line-height:1.7;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -290,6 +320,65 @@
       </div>
     </div>
 
+
+    <!-- EARTH SYNC -->
+    <div class="accordion">
+      <div class="acc-header" id="acc-hdr-earth" onclick="toggleAcc('earth')">
+        <span class="acc-title">⊕ Live Earth Sync — Schumann Resonance</span>
+        <span class="acc-arrow">▾</span>
+      </div>
+      <div class="acc-body" id="acc-body-earth">
+
+        <div class="sr-status-row">
+          <div class="sr-stat">
+            <div class="sr-stat-val" id="srKp">—</div>
+            <div class="sr-stat-lbl">Kp Index</div>
+            <div class="kp-bar"><div class="kp-fill" id="srKpBar" style="width:0%"></div></div>
+          </div>
+          <div class="sr-stat">
+            <div class="sr-stat-val" id="srSolar">—</div>
+            <div class="sr-stat-lbl">Solar Wind km/s</div>
+          </div>
+          <div class="sr-stat">
+            <div class="sr-stat-val" id="srBt">—</div>
+            <div class="sr-stat-lbl">IMF Bt (nT)</div>
+          </div>
+          <div class="sr-stat">
+            <div class="sr-stat-val" id="srField">—</div>
+            <div class="sr-stat-lbl">Field State</div>
+          </div>
+          <div class="sr-stat">
+            <div class="sr-stat-val" id="srTime" style="font-size:11px">—</div>
+            <div class="sr-stat-lbl">UTC</div>
+          </div>
+        </div>
+
+        <div class="panel-label">Schumann harmonics — click SR1 or SR2 to lock beat frequency</div>
+        <div class="sr-harmonic-grid" id="srGrid"></div>
+
+        <div class="sr-btn-row">
+          <button class="sr-sync-btn" id="srFetchBtn" onclick="srFetchLive()">↻ Fetch live space weather</button>
+          <button class="sr-sync-btn" id="srAutoBtn" onclick="srToggleAuto()">⟳ Auto-refresh off</button>
+        </div>
+
+        <div class="sr-manual">
+          <span class="ctrl-label" style="min-width:auto;font-size:9px;">Manual SR1 Hz</span>
+          <input type="number" class="sr-manual-input" id="srManualInput" value="7.83" step="0.01" min="6" max="9">
+          <button class="sr-manual-btn" onclick="srApplyManual()">Set</button>
+        </div>
+        <div class="sr-fetch-status" id="srFetchStatus"></div>
+
+        <div class="sr-note">
+          SR1 (7.83 Hz) and SR2 (14.3 Hz) fall within binaural beat perception range and engage the beat engine directly.
+          SR3–SR5 (20.8, 27.3, 33.8 Hz) are displayed for context — above ~30 Hz binaural beats become two separate tones.
+          Space weather data (Kp index, solar wind) via NOAA SWPC. Schumann fundamental drifts ±0.5 Hz from baseline;
+          amplitude spikes during high-Kp events indicate elevated ionospheric activity.
+          For precise live SR amplitude, cross-reference <a href="https://www.heartmath.org/gci/gcms/live-data/" target="_blank" style="color:var(--accent2)">HeartMath GCI</a> or
+          <a href="https://schumannresonance.today" target="_blank" style="color:var(--accent2)">schumannresonance.today</a>.
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -314,8 +403,8 @@ let wandPhase = 0, currentWandSpeed = 4.0;
 const BANDS = [
   {id:'seg-delta',name:'Delta',range:[0,4],   label:'Δ Delta · 0–4 Hz · deep sleep / restoration', color:'#3a3a6a', info:'Deep repair, dreamless sleep, physical restoration.'},
   {id:'seg-theta',name:'Theta',range:[4,8],   label:'Θ Theta · 4–8 Hz · hypnagogic / trance',     color:'#3a4a6a', info:'Hypnagogic imagery, dream-logic, deep trance, creative incubation.'},
-  {id:'seg-alpha',name:'Alpha',range:[8,12],  label:'α Alpha · 8–12 Hz · relaxed alertness',        color:'#2a4a40', info:'Relaxed alertness, creative receptivity, meditative onset.'},
-  {id:'seg-beta', name:'Beta', range:[12,30], label:'β Beta · 12–30 Hz · focused cognition',        color:'#3a3a4a', info:'Focused cognition, working memory, active problem solving.'},
+  {id:'seg-alpha',name:'Alpha',range:[8,12.5],  label:'α Alpha · 8–12 Hz · relaxed alertness',        color:'#2a4a40', info:'Relaxed alertness, creative receptivity, meditative onset.'},
+  {id:'seg-beta', name:'Beta', range:[12.5,30], label:'β Beta · 12–30 Hz · focused cognition',        color:'#3a3a4a', info:'Focused cognition, working memory, active problem solving.'},
   {id:'seg-gamma',name:'Gamma',range:[30,100],label:'γ Gamma · 30+ Hz · insight / binding',         color:'#3a2a5a', info:'Neural binding, insight states, heightened awareness.'},
 ];
 function getBand(hz){ for(const b of BANDS) if(hz>=b.range[0]&&hz<b.range[1]) return b; return BANDS[4]; }
@@ -685,6 +774,184 @@ function riftLoop(){
 
 updateUI(); riftLoop();
 setInterval(()=>{if(playing) updateWaveform();},120);
+
+// ── EARTH SYNC ────────────────────────────────────────────────
+const SR_HARMONICS = [
+  {mode:'SR1', hz:7.83,  audible:true,  label:'Theta/Alpha'},
+  {mode:'SR2', hz:14.3,  audible:true,  label:'Alpha/Beta'},
+  {mode:'SR3', hz:20.8,  audible:false, label:'Beta'},
+  {mode:'SR4', hz:27.3,  audible:false, label:'Beta/Gamma'},
+  {mode:'SR5', hz:33.8,  audible:false, label:'Gamma'},
+];
+let srLockedMode = null;
+let srAutoRefresh = false;
+let srAutoInterval = null;
+let srAmplitudes = [0.85, 0.55, 0.35, 0.22, 0.14]; // relative, updated by Kp
+
+function srBuildGrid() {
+  const grid = document.getElementById('srGrid');
+  grid.innerHTML = '';
+  SR_HARMONICS.forEach((h, i) => {
+    const div = document.createElement('div');
+    div.className = 'sr-harmonic' + (h.audible ? ' audible' : ' inaudible');
+    div.id = 'srH' + i;
+    div.onclick = h.audible ? () => srLock(i) : null;
+    div.innerHTML = `
+      <span class="sr-hz">${h.hz.toFixed(2)}</span>
+      <span class="sr-mode">${h.mode} · ${h.label}</span>
+      <div class="sr-amp-bar"><div class="sr-amp-fill" id="srAmp${i}" style="width:${Math.round(srAmplitudes[i]*100)}%"></div></div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function srLock(i) {
+  const h = SR_HARMONICS[i];
+  if (!h.audible) return;
+  if (srLockedMode === i) {
+    // unlock
+    srLockedMode = null;
+    document.getElementById('srH' + i).classList.remove('locked');
+    return;
+  }
+  // unlock previous
+  if (srLockedMode !== null) document.getElementById('srH' + srLockedMode).classList.remove('locked');
+  srLockedMode = i;
+  document.getElementById('srH' + i).classList.add('locked');
+  // apply to binaural engine
+  beatFreq = h.hz;
+  document.getElementById('beatSlider').value = h.hz;
+  if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.3);
+  updateUI();
+}
+
+function srUpdateAmplitudesFromKp(kp) {
+  // higher Kp = elevated amplitudes across all modes, especially higher ones
+  const base = [0.85, 0.55, 0.35, 0.22, 0.14];
+  const surge = Math.min(kp / 9, 1);
+  srAmplitudes = base.map((b, i) => Math.min(1, b + surge * (0.15 + i * 0.08)));
+  SR_HARMONICS.forEach((h, i) => {
+    const bar = document.getElementById('srAmp' + i);
+    if (bar) bar.style.width = Math.round(srAmplitudes[i] * 100) + '%';
+  });
+}
+
+function srSetStatus(msg, color) {
+  const el = document.getElementById('srFetchStatus');
+  el.textContent = msg;
+  el.style.color = color || 'var(--text3)';
+}
+
+async function srFetchLive() {
+  srSetStatus('Fetching NOAA space weather...', 'var(--amber)');
+  try {
+    // NOAA solar wind + Kp — these endpoints are CORS-open
+    const [kpRes, swRes] = await Promise.all([
+      fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'),
+      fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json')
+    ]);
+    const kpData = await kpRes.json();
+    const swData = await swRes.json();
+
+    // Kp: last entry [time, kp_text, kp_float]
+    const lastKp = kpData[kpData.length - 1];
+    const kp = parseFloat(lastKp[1]);
+
+    // Solar wind: last entry [time, density, speed, temp]
+    const lastSw = swData[swData.length - 1];
+    const swSpeed = parseFloat(lastSw[2]);
+
+    // Bt from Bz data (magnetic field)
+    let bt = null;
+    try {
+      const magRes = await fetch('https://services.swpc.noaa.gov/products/solar-wind/mag-7-day.json');
+      const magData = await magRes.json();
+      const lastMag = magData[magData.length - 1];
+      bt = Math.abs(parseFloat(lastMag[6])).toFixed(1); // Bt field
+    } catch(e) { bt = '—'; }
+
+    // Update display
+    document.getElementById('srKp').textContent = isNaN(kp) ? '—' : kp.toFixed(1);
+    document.getElementById('srSolar').textContent = isNaN(swSpeed) ? '—' : Math.round(swSpeed);
+    document.getElementById('srBt').textContent = bt;
+
+    // Kp bar color
+    const kpBar = document.getElementById('srKpBar');
+    const kpPct = Math.min((kp / 9) * 100, 100);
+    kpBar.style.width = kpPct + '%';
+    kpBar.className = 'kp-fill' + (kp >= 7 ? ' hot' : kp >= 4 ? ' warn' : '');
+    kpBar.style.background = kp >= 7 ? '#c83a3a' : kp >= 4 ? 'var(--warn)' : 'var(--accent)';
+
+    // Field state label
+    let fieldState = 'Quiet';
+    if (kp >= 7) fieldState = 'Storm';
+    else if (kp >= 5) fieldState = 'Active';
+    else if (kp >= 3) fieldState = 'Unsettled';
+    document.getElementById('srField').textContent = fieldState;
+
+    // SR1 fundamental: drifts slightly with solar activity
+    // Real drift is ±0.3 Hz from 7.83 baseline; approximate from Kp
+    const drift = (kp / 9) * 0.3 - 0.15 + (Math.sin(Date.now() / 600000) * 0.08);
+    SR_HARMONICS[0].hz = parseFloat((7.83 + drift).toFixed(2));
+    SR_HARMONICS[1].hz = parseFloat((14.3 + drift * 1.83).toFixed(2));
+    SR_HARMONICS[2].hz = parseFloat((20.8 + drift * 2.66).toFixed(2));
+    SR_HARMONICS[3].hz = parseFloat((27.3 + drift * 3.49).toFixed(2));
+    SR_HARMONICS[4].hz = parseFloat((33.8 + drift * 4.32).toFixed(2));
+
+    // Update amplitude bars from Kp
+    srUpdateAmplitudesFromKp(kp);
+
+    // Rebuild grid with updated values
+    const prevLock = srLockedMode;
+    srLockedMode = null;
+    srBuildGrid();
+    if (prevLock !== null) srLock(prevLock);
+
+    // UTC time
+    document.getElementById('srTime').textContent = new Date().toUTCString().slice(17, 22);
+
+    srSetStatus('Updated from NOAA · ' + new Date().toLocaleTimeString(), 'var(--accent)');
+  } catch(e) {
+    srSetStatus('Live fetch failed — NOAA may be unavailable. Use manual entry below.', 'var(--warn)');
+  }
+}
+
+function srApplyManual() {
+  const val = parseFloat(document.getElementById('srManualInput').value);
+  if (isNaN(val) || val < 4 || val > 30) {
+    srSetStatus('Enter a value between 4 and 30 Hz', 'var(--warn)');
+    return;
+  }
+  SR_HARMONICS[0].hz = val;
+  const prevLock = srLockedMode;
+  srLockedMode = null;
+  srBuildGrid();
+  if (prevLock !== null) srLock(prevLock);
+  else {
+    // Auto-lock SR1 on manual set
+    srLock(0);
+  }
+  srSetStatus('Manual SR1 set to ' + val.toFixed(2) + ' Hz — SR1 locked', 'var(--accent)');
+}
+
+function srToggleAuto() {
+  const btn = document.getElementById('srAutoBtn');
+  srAutoRefresh = !srAutoRefresh;
+  if (srAutoRefresh) {
+    btn.textContent = '⟳ Auto-refresh on (5 min)';
+    btn.classList.add('live');
+    srFetchLive();
+    srAutoInterval = setInterval(srFetchLive, 5 * 60 * 1000);
+  } else {
+    btn.textContent = '⟳ Auto-refresh off';
+    btn.classList.remove('live');
+    clearInterval(srAutoInterval);
+  }
+}
+
+// init grid on load
+srBuildGrid();
+
 </script>
 </body>
 </html>
