@@ -792,6 +792,7 @@ const SR_BASELINE = [
 ];
 let srAmplitudes = [0.85, 0.55, 0.35, 0.22, 0.14];
 let srLockedBaseline = null;  // which baseline tile is locked
+let srLockedCarrier = null;   // which SR3-5 tile sets carrier
 let srLiveLocked = false;     // whether the live fetch value is locked
 let srLiveHz = null;          // last successfully fetched live SR1 value
 let srAutoRefresh = false;
@@ -802,13 +803,17 @@ function srBuildGrid() {
   grid.innerHTML = '';
   SR_BASELINE.forEach((h, i) => {
     const div = document.createElement('div');
-    div.className = 'sr-harmonic' + (h.audible ? ' audible' : ' inaudible');
+    const isCarrier = !h.audible; // SR3-5 set carrier instead
+    div.className = 'sr-harmonic' + (h.audible ? ' audible' : ' audible'); // all clickable
     if (h.audible && srLockedBaseline === i && !srLiveLocked) div.classList.add('locked');
+    if (isCarrier && srLockedCarrier === i) div.classList.add('locked');
     div.id = 'srH' + i;
-    if (h.audible) div.onclick = () => srLockBaseline(i);
+    div.onclick = h.audible ? () => srLockBaseline(i) : () => srLockCarrier(i);
+    const tipText = isCarrier ? 'click → set carrier' : 'click → lock beat';
     div.innerHTML = `
       <span class="sr-hz">${h.hz.toFixed(2)}</span>
       <span class="sr-mode">${h.mode} · ${h.label}</span>
+      <span class="sr-mode" style="color:var(--text3);font-size:7px;">${tipText}</span>
       <div class="sr-amp-bar"><div class="sr-amp-fill" id="srAmp${i}" style="width:${Math.round(srAmplitudes[i]*100)}%"></div></div>
     `;
     grid.appendChild(div);
@@ -830,6 +835,23 @@ function srLockBaseline(i) {
   srLockedBaseline = i;
   srBuildGrid();
   srEngageBeat(h.hz);
+}
+
+function srLockCarrier(i) {
+  const h = SR_BASELINE[i];
+  if (srLockedCarrier === i) {
+    srLockedCarrier = null;
+    srBuildGrid();
+    return;
+  }
+  srLockedCarrier = i;
+  // Set the carrier frequency to this harmonic
+  carrierFreq = h.hz;
+  document.getElementById('carrierSlider').value = Math.min(h.hz, 1000);
+  if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.3);
+  if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.3);
+  updateUI();
+  srBuildGrid();
 }
 
 function srLockLive() {
@@ -880,60 +902,75 @@ function srSetStatus(msg, color) {
 
 async function srFetchLive() {
   srSetStatus('Fetching NOAA space weather...', 'var(--amber)');
+  let kp = NaN, swSpeed = NaN, bt = '—';
+
+  // Fetch Kp — try both common NOAA endpoints, check both field indices
   try {
-    const [kpRes, swRes] = await Promise.all([
-      fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'),
-      fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json')
-    ]);
+    const kpRes = await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
     const kpData = await kpRes.json();
-    const swData = await swRes.json();
-
-    const lastKp = kpData[kpData.length - 1];
-    const kp = parseFloat(lastKp[1]);
-    const lastSw = swData[swData.length - 1];
-    const swSpeed = parseFloat(lastSw[2]);
-
-    let bt = '—';
-    try {
-      const magRes = await fetch('https://services.swpc.noaa.gov/products/solar-wind/mag-7-day.json');
-      const magData = await magRes.json();
-      const lastMag = magData[magData.length - 1];
-      bt = Math.abs(parseFloat(lastMag[6])).toFixed(1);
-    } catch(e) {}
-
-    // Update display
-    document.getElementById('srKp').textContent = isNaN(kp) ? '—' : kp.toFixed(1);
-    document.getElementById('srSolar').textContent = isNaN(swSpeed) ? '—' : Math.round(swSpeed);
-    document.getElementById('srBt').textContent = bt;
-    document.getElementById('srTime').textContent = new Date().toUTCString().slice(17, 22);
-
-    const kpBar = document.getElementById('srKpBar');
-    if (!isNaN(kp)) {
-      kpBar.style.width = Math.min((kp / 9) * 100, 100) + '%';
-      kpBar.style.background = kp >= 7 ? '#c83a3a' : kp >= 4 ? 'var(--warn)' : 'var(--accent)';
+    // NOAA format: [time_tag, kp_text, kp_float] — but header row is index 0
+    // Skip header row (it contains strings like "time_tag")
+    const rows = kpData.filter(r => !isNaN(parseFloat(r[2])));
+    if (rows.length > 0) {
+      const last = rows[rows.length - 1];
+      kp = parseFloat(last[2]); // index 2 is the numeric float
     }
-
-    let fieldState = 'Quiet';
-    if (!isNaN(kp)) {
-      if (kp >= 7) fieldState = 'Storm';
-      else if (kp >= 5) fieldState = 'Active';
-      else if (kp >= 3) fieldState = 'Unsettled';
-    }
-    document.getElementById('srField').textContent = fieldState;
-
-    // Compute live SR1 — small drift from Kp, always safe
-    if (!isNaN(kp)) {
-      const drift = ((kp / 9) * 0.3 - 0.15) + (Math.sin(Date.now() / 600000) * 0.06);
-      srLiveHz = parseFloat((7.83 + drift).toFixed(2));
-      document.getElementById('srLiveHzDisplay').textContent = srLiveHz.toFixed(2) + ' Hz';
-      srUpdateAmplitudesFromKp(kp);
-      // If live is locked, update beat to new value
-      if (srLiveLocked) srEngageBeat(srLiveHz);
-    }
-
-    srSetStatus('Updated from NOAA · ' + new Date().toLocaleTimeString(), 'var(--accent)');
   } catch(e) {
-    srSetStatus('Live fetch failed — NOAA may be unavailable. Enter a value manually below.', 'var(--warn)');
+    // Try alternate 1-minute endpoint
+    try {
+      const kpRes2 = await fetch('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json');
+      const kpData2 = await kpRes2.json();
+      const last = kpData2[kpData2.length - 1];
+      kp = parseFloat(last.kp_index || last.kp || last[1] || last[2]);
+    } catch(e2) {}
+  }
+
+  // Fetch solar wind plasma
+  try {
+    const swRes = await fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json');
+    const swData = await swRes.json();
+    const rows = swData.filter(r => !isNaN(parseFloat(r[2])));
+    if (rows.length > 0) swSpeed = parseFloat(rows[rows.length - 1][2]);
+  } catch(e) {}
+
+  // Fetch magnetic field
+  try {
+    const magRes = await fetch('https://services.swpc.noaa.gov/products/solar-wind/mag-7-day.json');
+    const magData = await magRes.json();
+    const rows = magData.filter(r => !isNaN(parseFloat(r[6])));
+    if (rows.length > 0) bt = Math.abs(parseFloat(rows[rows.length - 1][6])).toFixed(1);
+  } catch(e) {}
+
+  // Update space weather display — each independently
+  document.getElementById('srKp').textContent = isNaN(kp) ? '—' : kp.toFixed(1);
+  document.getElementById('srSolar').textContent = isNaN(swSpeed) ? '—' : Math.round(swSpeed);
+  document.getElementById('srBt').textContent = bt;
+  document.getElementById('srTime').textContent = new Date().toUTCString().slice(17, 22);
+
+  if (!isNaN(kp)) {
+    const kpBar = document.getElementById('srKpBar');
+    kpBar.style.width = Math.min((kp / 9) * 100, 100) + '%';
+    kpBar.style.background = kp >= 7 ? '#c83a3a' : kp >= 4 ? 'var(--warn)' : 'var(--accent)';
+    let fieldState = kp >= 7 ? 'Storm' : kp >= 5 ? 'Active' : kp >= 3 ? 'Unsettled' : 'Quiet';
+    document.getElementById('srField').textContent = fieldState;
+    srUpdateAmplitudesFromKp(kp);
+  }
+
+  // Compute live SR1 — use Kp if available, fall back to time-of-day drift only
+  // Either way we ALWAYS produce a live value after a fetch attempt
+  const kpSafe = isNaN(kp) ? 1.5 : kp; // assume mild activity if Kp unavailable
+  const todayDrift = Math.sin(Date.now() / 600000) * 0.06;
+  const kpDrift = ((kpSafe / 9) * 0.3 - 0.15);
+  srLiveHz = parseFloat((7.83 + kpDrift + todayDrift).toFixed(2));
+  const source = isNaN(kp) ? ' (est, Kp unavailable)' : ' (est from Kp ' + kp.toFixed(1) + ')';
+  document.getElementById('srLiveHzDisplay').textContent = srLiveHz.toFixed(2) + ' Hz' + source;
+  if (srLiveLocked) srEngageBeat(srLiveHz);
+
+  const fetchedAny = !isNaN(swSpeed) || !isNaN(kp) || bt !== '—';
+  if (fetchedAny) {
+    srSetStatus('Updated from NOAA · ' + new Date().toLocaleTimeString(), 'var(--accent)');
+  } else {
+    srSetStatus('NOAA unreachable — showing estimated SR1 drift only. Try manual entry.', 'var(--warn)');
   }
 }
 
