@@ -4,17 +4,19 @@
 
 A full acoustic environment builder for consciousness-state attunement, built on the Web Audio API. No dependencies, no install — one standalone HTML file. Drop it in any static host or open it locally in a browser.
 
-The tool has five independent layers that can be used together or separately:
+The tool has five independent sound layers plus two higher-level control systems:
 
 - **Binaural tone generator** — the core entrainment engine
 - **Noise color bed** — spectral texture and environmental masking
 - **Environmental sounds** — immersive acoustic atmosphere
 - **Resonant & harmonic tones** — tuned frequencies and rhythmic structures
 - **Live Earth Sync** — real-time Schumann resonance and space weather attunement
+- **Session presets** — 25 one-click configurations across five categories
+- **Scripted programs** — timed sequences that automate layering, fading, and guided voice
 
-All layers run simultaneously through their own gain controls, so you can build up a full layered session or strip it back to a single element.
+All sound layers run simultaneously through their own gain controls. Session presets load a complete configuration in one click. Scripted programs run automated sessions — fading sounds in and out, delivering spoken guidance, and moving through a designed arc of experience.
 
-→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/)
+→ [Live tool](https://[your-github-username].github.io/audio-shear-zone/)
 
 ---
 
@@ -204,6 +206,26 @@ Some combinations that work well:
 
 ---
 
+
+## Session presets
+
+The **Session Preset** dropdown at the top of the tool loads a complete configuration — beat frequency, carrier, noise color, environmental sound, and harmonic layers — in one click. The tone starts automatically. A description of each preset appears below the dropdown when selected.
+
+Presets are organized into five categories:
+
+**Crystal Path / Chakra** — seven presets ascending the vertical axis from Logos/Shadow/Root at delta through Chaos/Spirit/Crown at high beta. Beat frequency climbs steadily from 0.5 Hz at the base to 28 Hz at the crown; carrier follows the Solfeggio sequence from 396 Hz to 963 Hz. Each preset has its own noise color, environmental sound, and harmonic character matched to the principle it represents.
+
+**Gateway Tapes** — four presets mapped to Monroe Institute Focus Levels 10, 12, 15, and 21. Each follows the acoustic structure documented in the declassified CIA analysis: OM Pulse as the resonant tuning layer, pink noise bed, binaural tone at the appropriate frequency for that Focus Level. See the Gateway Tapes section below for full details.
+
+**Combining Layers** — the five session recipes from the Combining Layers section below, available as one-click presets: Deep Trance, Theta Incubation, Alpha Focus, Ceremonial/Ritual, and Isochronic Stack.
+
+**General** — six broadly useful configurations: Deep Sleep, Lucid Dream Entry, Creative Flow, Sharp Focus, Grounding, and Stress Release.
+
+**Live Earth** — two presets designed around the Live Earth Sync panel: Schumann Baseline (SR1 locked, cave environment, OM pulse) and Planetary Storm Mode (for high-Kp geomagnetic events — fetch live data and lock SR1 first for full effect).
+
+The **◼ End Session** button in the transport row stops all sound immediately regardless of what is active — useful if a session becomes overwhelming or you simply want silence.
+
+---
 ## Gateway Tapes configurations
 
 The Monroe Institute's Gateway Experience (1970s–present) is the most thoroughly documented audio-based consciousness research program, including a declassified 1983 CIA analysis. Monroe's Hemi-Sync technology is structurally identical to binaural beats — two tones, one per ear, difference frequency as the entrainment target — layered with pink and white noise and guided voice. The Focus Level system maps directly onto the brainwave bands used in this tool.
@@ -262,6 +284,43 @@ The CIA's 1983 analysis ("Analysis and Assessment of the Gateway Process," Lt. C
 
 ---
 
+## VI. Scripted programs
+
+The **⟐ Program** dropdown (visible when a `sequences/` folder is present in the repository) runs timed sessions that automate everything — fading layers in and out, adjusting volumes, triggering spoken guidance, and moving through a designed arc of experience over a set duration.
+
+### How programs work
+
+A program is a JSON file in the `sequences/` folder. It contains a list of steps, each with a timestamp (in seconds from session start) and an action. When you press Run, the sequencer fires each step at its scheduled time. A progress bar tracks the session. The ◼ End Session button cancels the program and stops all sound at any point.
+
+Programs can control any layer the tool supports:
+
+- **env** — start an environmental sound, fade its volume in or out
+- **noise** — start a noise color, fade its volume
+- **harm** — start a harmonic layer, fade the harmonic bus
+- **binaural** — set beat and carrier frequencies, fade the tone in or out
+- **speak** — deliver spoken guidance via the browser's built-in speech synthesis
+- **audio** — play a pre-rendered audio file (for ElevenLabs voice or field recordings)
+- **stop_env / stop_harm** — gracefully fade out and stop a layer
+
+Steps are not blocking — multiple steps at the same timestamp fire simultaneously, and a speak step does not pause the timeline. The sequencer is designed so that binaural tones, environmental sounds, and spoken guidance can all be layered with precise timing.
+
+### Guided voice
+
+The `speak` action uses the Web Speech API built into every modern browser — no external service, no audio files, works immediately. Rate and pitch are controllable; slowing the rate to 0.75–0.82 and lowering pitch to 0.85–0.88 produces a more grounded, meditative delivery.
+
+For production quality, render voice lines with ElevenLabs or any text-to-speech tool, save them to `sequences/audio/`, and reference them with the `audio` action instead. The JSON structure is otherwise identical — swap `speak` for `audio` when moving from draft to published.
+
+### Available programs
+
+Programs appear in the dropdown automatically when listed in `sequences/manifest.json`. The included program is:
+
+**Introduction to the Audio Shear Zone (5 min)** — an onboarding sequence for first-time users. Ocean environment fades in, followed by pink noise, OM pulse, and a binaural tone at Alpha I. Spoken guidance explains each layer as it arrives. Everything fades out cleanly at the end. Designed to orient a new listener to what each element of the tool is and does, before they begin exploring on their own.
+
+### Writing your own programs
+
+See **`sequences/SCRIPTING.md`** for the complete sequence authoring guide — full reference for all action types, volume guidelines, timing patterns, and a complete minimal example. Writing a sequence requires only a text editor and basic familiarity with JSON.
+
+---
 ## Best practices
 
 **Start with pink or brown noise at low volume** before bringing in the binaural tones. It gives your auditory system something to settle into before the entrainment begins.
@@ -286,8 +345,23 @@ The Schumann resonance data is real geophysical data from NOAA's Space Weather P
 
 ---
 
+## Repository structure
+
+```
+audio-shear-zone/
+├── index.html              ← the entire tool — one standalone file
+└── sequences/
+    ├── manifest.json       ← lists available programs
+    ├── SCRIPTING.md        ← sequence authoring guide
+    ├── onboarding.json     ← included onboarding program
+    └── audio/              ← place pre-rendered voice MP3s here
+```
+
+The tool works as a single `index.html` file without the `sequences/` folder. The Programs dropdown only appears when `sequences/manifest.json` is found. No build step, no dependencies, no server required beyond basic static file hosting.
+
+---
 ## Part of the Myathe Magick System
 
 This tool is one node in a suite of interactive research and attunement applications developed alongside the Myathe Magick System — a comprehensive theoretical framework synthesizing torsion field physics, sacred geometry, Kabbalistic cosmology, chaos magick, Mayan cosmology, Jungian psychology, mycorrhizal biology, and archaeoastronomy.
 
-→ [Myathe Magick YouTube channel](https://www.youtube.com/channel/UClWbNxQMrx-XB3h8xXh_oxQ)
+→ [Myathe Magick YouTube channel](https://youtube.com/@MyatheMagick)
