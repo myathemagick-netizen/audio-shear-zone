@@ -1,0 +1,106 @@
+{
+  "id": "onboarding",
+  "title": "Introduction to the Audio Shear Zone",
+  "duration": 300,
+  "steps": [
+
+    {"t": 0,
+     "action": "env",
+     "target": "ocean",
+     "vol": 0,
+     "fadeTo": 0.5,
+     "fadeTime": 8,
+     "label": "Ocean environment fading in..."},
+
+    {"t": 10,
+     "action": "speak",
+     "text": "Welcome to the Audio Shear Zone. Find a comfortable position, and if you have headphones, put them on now. Take a slow breath in... and out. Let the sound of the ocean settle around you.",
+     "rate": 0.78,
+     "pitch": 0.85},
+
+    {"t": 32,
+     "action": "noise",
+     "target": "pink",
+     "vol": 0,
+     "fadeTo": 0.18,
+     "fadeTime": 10,
+     "label": "Pink noise bed fading in..."},
+
+    {"t": 44,
+     "action": "speak",
+     "text": "Beneath the ocean, you may begin to notice a soft presence of sound. This is pink noise — a balanced spectral texture that gently masks distraction and prepares the auditory system for what comes next.",
+     "rate": 0.78,
+     "pitch": 0.85},
+
+    {"t": 75,
+     "action": "harm",
+     "target": "om",
+     "vol": 0,
+     "fadeTo": 0.45,
+     "fadeTime": 8,
+     "label": "OM resonance engaging..."},
+
+    {"t": 85,
+     "action": "speak",
+     "text": "A low tone is now entering the space. This is the OM fundamental — one hundred and thirty six point one hertz. A frequency associated with breath, with the pulse of the natural world. You do not need to do anything with it. Simply allow it.",
+     "rate": 0.78,
+     "pitch": 0.85},
+
+    {"t": 120,
+     "action": "binaural",
+     "beat": 10,
+     "carrier": 396,
+     "fadeTo": 0.3,
+     "fadeTime": 15,
+     "label": "Binaural tone engaging — Alpha I at 10 Hz..."},
+
+    {"t": 138,
+     "action": "speak",
+     "text": "If you are wearing headphones, you may now notice a subtle pulsing quality in the sound — a gentle rhythm that seems to arise from nowhere. This is a binaural beat. Your left ear is receiving a tone of three hundred and ninety six hertz. Your right ear, four hundred and six hertz. The difference — ten hertz — exists only in your mind. Your brain is generating it. This is the frequency of relaxed, open awareness.",
+     "rate": 0.78,
+     "pitch": 0.85},
+
+    {"t": 195,
+     "action": "speak",
+     "text": "Simply rest here. There is nothing to achieve. The sounds are doing their work. Your only task is to breathe slowly, and allow.",
+     "rate": 0.75,
+     "pitch": 0.85},
+
+    {"t": 230,
+     "action": "binaural",
+     "fadeTo": 0,
+     "fadeTime": 20,
+     "label": "Binaural tone fading out..."},
+
+    {"t": 232,
+     "action": "speak",
+     "text": "The binaural tone is now gently fading. The tools of this space are available to you whenever you choose to return. You may explore freely — the session presets, the noise layers, the environmental sounds, the harmonic tones. Each combination opens a different door.",
+     "rate": 0.78,
+     "pitch": 0.85},
+
+    {"t": 258,
+     "action": "noise",
+     "target": "pink",
+     "fadeTo": 0,
+     "fadeTime": 15,
+     "label": "Pink noise fading out..."},
+
+    {"t": 270,
+     "action": "harm",
+     "target": "om",
+     "fadeTo": 0,
+     "fadeTime": 12,
+     "label": "OM tone fading out..."},
+
+    {"t": 275,
+     "action": "speak",
+     "text": "Welcome to the Audio Shear Zone.",
+     "rate": 0.72,
+     "pitch": 0.82},
+
+    {"t": 282,
+     "action": "stop_env",
+     "fadeTime": 18,
+     "label": "Ocean fading out..."}
+  ]
+}
