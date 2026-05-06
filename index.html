@@ -135,6 +135,21 @@
   /* PANIC BUTTON */
   .panic-btn{background:transparent;border:1px solid var(--warn2);color:var(--text3);padding:11px 20px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;transition:all 0.2s;}
   .panic-btn:hover{border-color:var(--warn);color:var(--warn);background:rgba(200,116,58,0.08);}
+
+  /* SEQUENCER / PROGRAMS */
+  .programs-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);flex-wrap:wrap;margin-bottom:0;}
+  .programs-bar-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);white-space:nowrap;}
+  .programs-select{background:var(--bg);border:1px solid var(--border2);color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:6px 10px;flex:1;min-width:180px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;}
+  .programs-select:focus{border-color:var(--accent2);}
+  .prog-run-btn{background:var(--bg2);border:1px solid var(--deep);color:var(--deep);padding:7px 16px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;transition:all 0.12s;white-space:nowrap;}
+  .prog-run-btn:hover{background:var(--deep2);}
+  .prog-run-btn.running{border-color:var(--warn);color:var(--warn);background:rgba(200,116,58,0.1);}
+  .prog-status-bar{width:100%;display:none;flex-direction:column;gap:4px;padding-top:8px;}
+  .prog-status-bar.visible{display:flex;}
+  .prog-status-text{font-size:9px;color:var(--text2);letter-spacing:0.5px;min-height:14px;}
+  .prog-progress-track{height:2px;background:var(--border);width:100%;position:relative;}
+  .prog-progress-fill{height:100%;background:var(--deep);width:0%;transition:width 1s linear;}
+  .prog-time{font-size:9px;color:var(--text3);}
 </style>
 </head>
 <body>
@@ -181,6 +196,23 @@
   </div>
 
   <div class="content">
+
+
+    <!-- PROGRAMS / SEQUENCER — hidden until sequences/manifest.json found -->
+    <div id="programsBar" class="programs-bar" style="display:none;">
+      <span class="programs-bar-label">⟐ Program</span>
+      <select class="programs-select" id="programSelect">
+        <option value="">— select a program —</option>
+      </select>
+      <button class="prog-run-btn" id="progRunBtn">▶ Run</button>
+      <div class="prog-status-bar" id="progStatusBar">
+        <div style="display:flex;justify-content:space-between;">
+          <span class="prog-status-text" id="progStatusText">Ready</span>
+          <span class="prog-time" id="progTimeText"></span>
+        </div>
+        <div class="prog-progress-track"><div class="prog-progress-fill" id="progProgressFill"></div></div>
+      </div>
+    </div>
 
     <!-- SESSION PRESETS -->
     <div class="preset-bar">
@@ -1295,6 +1327,284 @@ function panicStop() {
   // Suspend audio context to fully silence
   if (audioCtx) audioCtx.suspend();
 }
+
+
+// ── SEQUENCER / PROGRAMS ──────────────────────────────────────
+let seqRunning = false;
+let seqTimeouts = [];
+let seqStartTime = null;
+let seqDuration = 0;
+let seqTickInterval = null;
+let seqSpeechEnabled = typeof speechSynthesis !== 'undefined';
+
+function seqFmtTime(s) {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2,'0');
+}
+
+function seqSetStatus(msg) {
+  const el = document.getElementById('progStatusText');
+  if (el) el.textContent = msg;
+}
+
+function seqFadeGain(gainNode, fromVal, toVal, durationSec) {
+  if (!gainNode || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(fromVal, now);
+  gainNode.gain.linearRampToValueAtTime(toVal, now + durationSec);
+}
+
+async function seqLoadManifest() {
+  try {
+    const res = await fetch('sequences/manifest.json');
+    if (!res.ok) return; // no sequences folder — stay hidden
+    const manifest = await res.json();
+    const sel = document.getElementById('programSelect');
+    const bar = document.getElementById('programsBar');
+    if (!sel || !bar) return;
+    manifest.programs.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.file;
+      opt.textContent = p.title;
+      sel.appendChild(opt);
+    });
+    bar.style.display = 'flex';
+  } catch(e) {
+    // No sequences folder — silently do nothing
+  }
+}
+
+async function seqRunSelected() {
+  const sel = document.getElementById('programSelect');
+  if (!sel || !sel.value) return;
+  if (seqRunning) { seqStop(); return; }
+  try {
+    const res = await fetch('sequences/' + sel.value);
+    if (!res.ok) { seqSetStatus('Could not load sequence file.'); return; }
+    const seq = await res.json();
+    seqStart(seq);
+  } catch(e) {
+    seqSetStatus('Error loading sequence: ' + e.message);
+  }
+}
+
+function seqStart(seq) {
+  ensureCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  seqRunning = true;
+  seqStartTime = Date.now();
+  seqDuration = seq.duration || 300;
+
+  const btn = document.getElementById('progRunBtn');
+  if (btn) { btn.textContent = '◼ Stop'; btn.classList.add('running'); }
+
+  const statusBar = document.getElementById('progStatusBar');
+  if (statusBar) statusBar.classList.add('visible');
+
+  seqSetStatus(seq.title + ' — starting...');
+
+  // Schedule all steps
+  seq.steps.forEach(step => {
+    const delay = step.t * 1000;
+    const tid = setTimeout(() => seqExecuteStep(step, seq), delay);
+    seqTimeouts.push(tid);
+  });
+
+  // Progress ticker
+  seqTickInterval = setInterval(() => {
+    if (!seqRunning) return;
+    const elapsed = (Date.now() - seqStartTime) / 1000;
+    const pct = Math.min((elapsed / seqDuration) * 100, 100);
+    const fill = document.getElementById('progProgressFill');
+    const timeEl = document.getElementById('progTimeText');
+    if (fill) fill.style.width = pct + '%';
+    if (timeEl) timeEl.textContent = seqFmtTime(elapsed) + ' / ' + seqFmtTime(seqDuration);
+    if (elapsed >= seqDuration) seqStop();
+  }, 1000);
+}
+
+function seqExecuteStep(step, seq) {
+  if (!seqRunning) return;
+
+  if (step.label) seqSetStatus(step.label);
+
+  switch(step.action) {
+
+    case 'env':
+      if (!activeEnv || activeEnv !== step.target) {
+        if (envNode) { try { envNode.stop(); } catch(e) {} envNode = null; }
+        ['rain','ocean','wind','fire','thunder','cave'].forEach(t => {
+          const el = document.getElementById('eb-'+t);
+          if (el) el.classList.remove('on');
+        });
+        if (step.target) {
+          activeEnv = step.target;
+          envNode = makeEnvSound(step.target);
+          const el = document.getElementById('eb-'+step.target);
+          if (el) el.classList.add('on');
+        }
+      }
+      if (step.fadeTo !== undefined && envGainNode) {
+        const from = step.vol !== undefined ? step.vol : envGainNode.gain.value;
+        envGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        envGainNode.gain.setValueAtTime(from * 0.4, audioCtx.currentTime);
+        envGainNode.gain.linearRampToValueAtTime(step.fadeTo * 0.4, audioCtx.currentTime + (step.fadeTime || 3));
+        envVol = step.fadeTo;
+        const slider = document.getElementById('envVolSlider');
+        const label = document.getElementById('envVolVal');
+        if (slider) slider.value = Math.round(step.fadeTo * 100);
+        if (label) label.textContent = Math.round(step.fadeTo * 100) + '%';
+      }
+      break;
+
+    case 'noise':
+      if (!activeNoise || activeNoise !== step.target) {
+        if (noiseNode) { try { noiseNode.stop(); noiseNode.disconnect(); } catch(e) {} noiseNode = null; }
+        ['white','pink','brown','blue','violet','grey'].forEach(t => {
+          const el = document.getElementById('nb-'+t);
+          if (el) el.classList.remove('on');
+        });
+        if (step.target) {
+          activeNoise = step.target;
+          noiseNode = makeNoiseBuf(step.target);
+          noiseNode.connect(noiseGainNode);
+          noiseNode.start();
+          const el = document.getElementById('nb-'+step.target);
+          if (el) el.classList.add('on');
+        }
+      }
+      if (step.fadeTo !== undefined && noiseGainNode) {
+        const from = step.vol !== undefined ? step.vol * 0.35 : noiseGainNode.gain.value;
+        noiseGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        noiseGainNode.gain.setValueAtTime(from, audioCtx.currentTime);
+        noiseGainNode.gain.linearRampToValueAtTime(step.fadeTo * 0.35, audioCtx.currentTime + (step.fadeTime || 3));
+        noiseVol = step.fadeTo;
+        const slider = document.getElementById('noiseVolSlider');
+        const label = document.getElementById('noiseVolVal');
+        if (slider) slider.value = Math.round(step.fadeTo * 100);
+        if (label) label.textContent = Math.round(step.fadeTo * 100) + '%';
+      }
+      break;
+
+    case 'harm':
+      if (step.target && !activeHarm[step.target]) {
+        activeHarm[step.target] = makeHarmSound(step.target);
+        const el = document.getElementById('hb-'+step.target);
+        if (el) el.classList.add('on');
+        if (step.target === 'wand') {
+          document.getElementById('wandDisplay').style.display = 'block';
+          document.getElementById('wandSpeedRow').style.display = 'flex';
+          animateWand();
+        }
+      }
+      if (step.fadeTo !== undefined && harmGainNode) {
+        const from = step.vol !== undefined ? step.vol * 0.4 : harmGainNode.gain.value;
+        harmGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        harmGainNode.gain.setValueAtTime(from, audioCtx.currentTime);
+        harmGainNode.gain.linearRampToValueAtTime(step.fadeTo * 0.4, audioCtx.currentTime + (step.fadeTime || 3));
+        harmVol = step.fadeTo;
+        const slider = document.getElementById('harmVolSlider');
+        const label = document.getElementById('harmVolVal');
+        if (slider) slider.value = Math.round(step.fadeTo * 100);
+        if (label) label.textContent = Math.round(step.fadeTo * 100) + '%';
+      }
+      break;
+
+    case 'binaural':
+      if (step.beat !== undefined) {
+        beatFreq = step.beat;
+        document.getElementById('beatSlider').value = step.beat;
+      }
+      if (step.carrier !== undefined) {
+        carrierFreq = step.carrier;
+        document.getElementById('carrierSlider').value = step.carrier;
+      }
+      if (!playing && step.fadeTo > 0) {
+        togglePlay();
+        if (masterGain) {
+          masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+          masterGain.gain.linearRampToValueAtTime(step.fadeTo, audioCtx.currentTime + (step.fadeTime || 5));
+        }
+      } else if (step.fadeTo !== undefined && masterGain) {
+        masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(step.fadeTo, audioCtx.currentTime + (step.fadeTime || 5));
+        volume = step.fadeTo;
+        const slider = document.getElementById('volSlider');
+        const label = document.getElementById('volVal');
+        if (slider) slider.value = Math.round(step.fadeTo * 100);
+        if (label) label.textContent = Math.round(step.fadeTo * 100) + '%';
+      }
+      if (leftOsc) leftOsc.frequency.setTargetAtTime(carrierFreq, audioCtx.currentTime, 0.5);
+      if (rightOsc) rightOsc.frequency.setTargetAtTime(carrierFreq + beatFreq, audioCtx.currentTime, 0.5);
+      updateUI();
+      break;
+
+    case 'speak':
+      if (seqSpeechEnabled && step.text) {
+        const utt = new SpeechSynthesisUtterance(step.text);
+        utt.rate = step.rate || 0.82;
+        utt.pitch = step.pitch || 0.88;
+        utt.volume = step.volume || 0.9;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utt);
+      }
+      break;
+
+    case 'stop_harm':
+      if (step.target && activeHarm[step.target]) {
+        // Fade out then stop
+        if (harmGainNode) {
+          harmGainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + (step.fadeTime || 3));
+        }
+        setTimeout(() => {
+          if (activeHarm[step.target]) {
+            try { activeHarm[step.target].stop(); } catch(e) {}
+            delete activeHarm[step.target];
+            const el = document.getElementById('hb-'+step.target);
+            if (el) el.classList.remove('on');
+          }
+        }, (step.fadeTime || 3) * 1000);
+      }
+      break;
+
+    case 'stop_env':
+      if (envGainNode && step.fadeTime) {
+        envGainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + step.fadeTime);
+        setTimeout(() => {
+          if (envNode) { try { envNode.stop(); } catch(e) {} envNode = null; }
+          activeEnv = null;
+          ['rain','ocean','wind','fire','thunder','cave'].forEach(t => {
+            const el = document.getElementById('eb-'+t);
+            if (el) el.classList.remove('on');
+          });
+        }, step.fadeTime * 1000);
+      }
+      break;
+  }
+}
+
+function seqStop() {
+  seqRunning = false;
+  seqTimeouts.forEach(t => clearTimeout(t));
+  seqTimeouts = [];
+  clearInterval(seqTickInterval);
+  if (seqSpeechEnabled) speechSynthesis.cancel();
+  const btn = document.getElementById('progRunBtn');
+  if (btn) { btn.textContent = '▶ Run'; btn.classList.remove('running'); }
+  seqSetStatus('Session ended.');
+  const fill = document.getElementById('progProgressFill');
+  if (fill) fill.style.width = '0%';
+}
+
+// Load manifest on page load — silently does nothing if folder absent
+seqLoadManifest();
+
+// Wire up run button
+document.getElementById('progRunBtn').addEventListener('click', seqRunSelected);
+
 
 // Bind preset bar events after all functions are defined
 document.getElementById('sessionSelect').addEventListener('change', function(){ previewPreset(this.value); });
