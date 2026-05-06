@@ -50,7 +50,7 @@
      "action": "binaural",
      "beat": 10,
      "carrier": 396,
-     "fadeTo": 0.3,
+     "fadeTo": 0.15,
      "fadeTime": 15,
      "label": "Binaural tone engaging — Alpha I at 10 Hz..."},
 
