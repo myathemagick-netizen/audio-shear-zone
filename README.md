@@ -16,7 +16,7 @@ The tool has five independent sound layers plus two higher-level control systems
 
 All sound layers run simultaneously through their own gain controls. Session presets load a complete configuration in one click. Scripted programs run automated sessions — fading sounds in and out, delivering spoken guidance, and moving through a designed arc of experience.
 
-→ [Live tool](https://[your-github-username].github.io/audio-shear-zone/)
+→ [Live tool](https://myathemagick-netizen.github.io/audio-shear-zone/)
 
 ---
 
